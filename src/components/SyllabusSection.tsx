@@ -8,14 +8,14 @@ interface SyllabusSectionProps {
 }
 
 export default function SyllabusSection({ courses, lang, onSelectCourse }: SyllabusSectionProps) {
-  // Direct dynamic icon helper
+  // Direct dynamic icon helper with premium styled container
   const renderIcon = (iconName: string) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const IconComp = (Icons as any)[iconName];
     if (IconComp) {
-      return <IconComp className="w-6 h-6 text-emerald-400" />;
+      return <IconComp className="w-5 h-5 text-emerald-700" />;
     }
-    return <Icons.BookOpen className="w-6 h-6 text-emerald-400" />;
+    return <Icons.BookOpen className="w-5 h-5 text-emerald-700" />;
   };
 
   const t = {
@@ -44,19 +44,39 @@ export default function SyllabusSection({ courses, lang, onSelectCourse }: Sylla
   const isUr = lang === "ur";
 
   return (
-    <section id="syllabus-section" className="py-16 bg-[#0a0c10] shrink-0 scroll-mt-20 border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="syllabus-section" className="py-20 bg-neutral-50 scroll-mt-20 border-b border-slate-100 relative overflow-hidden">
+      {/* Decorative Traditional Border Detail */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-400 via-emerald-600 to-amber-500"></div>
+      
+      {/* Background Subtle Islamic Geometric Accent */}
+      <div className="absolute top-10 right-10 w-64 h-64 bg-emerald-500/[0.02] rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-10 left-10 w-64 h-64 bg-amber-500/[0.02] rounded-full blur-3xl pointer-events-none"></div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h3 className="text-xs tracking-[0.3em] text-emerald-500 uppercase font-bold mb-3">Our Expertise</h3>
-          <h2 className="text-3xl md:text-4xl font-serif font-semibold text-white tracking-wide">
+        <div className="text-center mb-16">
+          <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider border border-emerald-200/60 mb-3">
+            <Icons.Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+            {lang === "en" ? "Structured Syllabus" : lang === "ur" ? "باقاعدہ سلیبس" : "Class Syllabus"}
+          </span>
+          
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 tracking-wide">
             {t.headerTitle[lang]}
           </h2>
-          <p className="mt-4 text-white/60 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+          
+          <p className="mt-4 text-slate-600 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
             {t.headerSubtitle[lang]}
           </p>
-          <div className="w-24 h-0.5 bg-emerald-500 mx-auto mt-6 rounded-full"></div>
+          
+          {/* Elegant gold Divider with Islamic star center */}
+          <div className="flex items-center justify-center gap-3 mt-6">
+            <div className="w-12 h-0.5 bg-gradient-to-r from-transparent to-emerald-600 rounded-full"></div>
+            <div className="w-3 h-3 rotate-45 border-2 border-amber-500 bg-white shadow-sm flex items-center justify-center">
+              <div className="w-1 h-1 bg-amber-500"></div>
+            </div>
+            <div className="w-12 h-0.5 bg-gradient-to-l from-transparent to-emerald-600 rounded-full"></div>
+          </div>
         </div>
 
         {/* Courses Cards Grid */}
@@ -70,47 +90,50 @@ export default function SyllabusSection({ courses, lang, onSelectCourse }: Sylla
               <div 
                 key={course.id}
                 id={`course-card-${course.id}`}
-                className="group bg-[#0d1117] rounded-xl p-6 border border-white/5 hover:border-emerald-500/30 hover:bg-[#11141a]/60 hover:shadow-2xl hover:translate-y-[-2px] transition-all duration-300 flex flex-col justify-between"
+                className="group bg-white rounded-2xl p-6 md:p-8 border border-slate-200/80 hover:border-emerald-600/30 hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative shadow-sm"
               >
+                {/* Thin golden accent on top hover */}
+                <div className="absolute top-0 inset-x-0 h-1 bg-transparent group-hover:bg-amber-400 rounded-t-2xl transition-colors duration-300"></div>
+
                 <div>
-                  {/* Icon & Title */}
-                  <div className="flex items-start justify-between gap-4 mb-5">
-                    <div className="p-3 bg-[#0a0c10] border border-white/10 text-emerald-400 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300">
+                  {/* Icon & Recommended Age */}
+                  <div className="flex items-start justify-between gap-4 mb-6">
+                    <div className="p-3.5 bg-emerald-50 rounded-xl text-emerald-800 transition-all duration-300 group-hover:bg-emerald-600 group-hover:text-white shadow-sm border border-emerald-100/50">
                       {renderIcon(course.iconName)}
                     </div>
-                    <span className="text-[10px] uppercase tracking-wider font-bold bg-emerald-950/60 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20">
+                    <span className="text-[10px] uppercase tracking-wider font-bold bg-amber-50 text-amber-800 px-3 py-1 rounded-full border border-amber-200/50 shadow-xs">
                       {t.ageBadge[lang]} {course.recommendedAge}
                     </span>
                   </div>
 
-                  <h3 className={`text-lg font-serif font-medium text-white mb-3 group-hover:text-emerald-400 transition-colors ${isUr ? "text-right" : "text-left"}`}>
+                  <h3 className={`text-xl font-serif font-bold text-slate-800 mb-3 group-hover:text-emerald-700 transition-colors ${isUr ? "text-right" : "text-left"}`}>
                     {title}
                   </h3>
 
-                  <p className={`text-white/60 text-xs inline-block leading-relaxed mb-5 min-h-[3.5rem] ${isUr ? "text-right" : "text-left"}`} style={{ direction: isUr ? "rtl" : "ltr" }}>
+                  <p className={`text-slate-650 text-xs leading-relaxed mb-6 min-h-[3.5rem] ${isUr ? "text-right" : "text-left"}`} style={{ direction: isUr ? "rtl" : "ltr" }}>
                     {desc}
                   </p>
 
                   {/* Bullet Highlights */}
-                  <ul className="space-y-2 mb-6" style={{ direction: isUr ? "rtl" : "ltr" }}>
+                  <ul className="space-y-2.5 mb-8" style={{ direction: isUr ? "rtl" : "ltr" }}>
                     {features.map((feat, idx) => (
-                      <li key={idx} className="flex items-center gap-2.5 text-xs text-white/80">
-                        <Icons.CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <li key={idx} className="flex items-center gap-2.5 text-xs text-slate-700">
+                        <Icons.CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
                         <span>{feat}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Card CTA */}
+                {/* Card CTA with a stunning modern design */}
                 <button
                   type="button"
                   id={`course-cta-${course.id}`}
                   onClick={() => onSelectCourse(course.id)}
-                  className="w-full mt-2 py-2.5 px-4 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 hover:-translate-y-[1px] transition-all duration-300 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  className="w-full mt-2 py-3 px-4 rounded-xl bg-emerald-700 text-white hover:bg-emerald-850 hover:shadow-md transition-all duration-200 text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                 >
                   <span>{t.enrollBtn[lang]}</span>
-                  <Icons.ArrowRight className="w-3.5 h-3.5" />
+                  <Icons.ArrowRight className={`w-4 h-4 transition-transform duration-250 ${isUr ? "rotate-180" : "group-hover:translate-x-1"}`} />
                 </button>
               </div>
             );
