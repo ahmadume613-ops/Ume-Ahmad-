@@ -1,14 +1,14 @@
 import { createClient } from "@sanity/client";
 
 // Safe loading of Sanity environment variables
-const projectId = import.meta.env.VITE_SANITY_PROJECT_ID || "";
+const projectId = import.meta.env.VITE_SANITY_PROJECT_ID || "9kbc5fi1";
 const dataset = import.meta.env.VITE_SANITY_DATASET || "production";
 const apiVersion = import.meta.env.VITE_SANITY_API_VERSION || "2023-05-03";
 
 export const isSanityConfigured = !!projectId;
 
 export const sanityClient = createClient({
-  projectId: projectId || "mock-project-id",
+  projectId: projectId || "9kbc5fi1",
   dataset: dataset,
   apiVersion: apiVersion,
   useCdn: true, // Enable edge cache

@@ -6,7 +6,7 @@ export default defineConfig({
   title: "Worldwide Quran Academy CMS",
 
   // Using the project's environment variables (with fallback)
-  projectId: process.env.VITE_SANITY_PROJECT_ID || "your_project_id",
+  projectId: process.env.VITE_SANITY_PROJECT_ID || "9kbc5fi1",
   dataset: process.env.VITE_SANITY_DATASET || "production",
 
   plugins: [deskTool()],
