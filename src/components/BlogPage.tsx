@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { LanguageMode } from "../types";
-import { Search, BookOpen, Clock, Calendar, ArrowRight, User, X, Sparkles } from "lucide-react";
+import { Search, BookOpen, Clock, Calendar, ArrowRight, User, X, Sparkles, Loader2 } from "lucide-react";
+import { fetchSanityBlogPosts, isSanityConfigured } from "../sanityClient";
 
 interface BlogPageProps {
   lang: LanguageMode;
@@ -95,18 +96,40 @@ export default function BlogPage({ lang }: BlogPageProps) {
     }
   ];
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
-    const saved = localStorage.getItem("wqa_blog_posts");
-    if (saved) {
-      try {
-        setBlogPosts(JSON.parse(saved));
-      } catch (e) {
-        setBlogPosts(defaultBlogPosts);
+    async function loadPosts() {
+      setIsLoading(true);
+      if (isSanityConfigured) {
+        try {
+          const sanityPosts = await fetchSanityBlogPosts();
+          if (sanityPosts && sanityPosts.length > 0) {
+            setBlogPosts(sanityPosts);
+            setIsLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error("Sanity fetch failed, falling back to local posts", err);
+        }
       }
-    } else {
-      setBlogPosts(defaultBlogPosts);
-      localStorage.setItem("wqa_blog_posts", JSON.stringify(defaultBlogPosts));
+
+      // Fallback
+      const saved = localStorage.getItem("wqa_blog_posts");
+      if (saved) {
+        try {
+          setBlogPosts(JSON.parse(saved));
+        } catch (e) {
+          setBlogPosts(defaultBlogPosts);
+        }
+      } else {
+        setBlogPosts(defaultBlogPosts);
+        localStorage.setItem("wqa_blog_posts", JSON.stringify(defaultBlogPosts));
+      }
+      setIsLoading(false);
     }
+
+    loadPosts();
   }, []);
 
   const filteredPosts = blogPosts.filter((post) => {
@@ -178,7 +201,14 @@ export default function BlogPage({ lang }: BlogPageProps) {
         </div>
 
         {/* Blog post Grid */}
-        {filteredPosts.length > 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-slate-200/60 shadow-3xs">
+            <Loader2 className="w-10 h-10 text-emerald-700 animate-spin mb-4" />
+            <p className="text-slate-600 font-medium text-sm animate-pulse font-serif">
+              {lang === "en" ? "Fetching latest articles from Sanity CMS..." : "سرور سے مضامین لوڈ کیے جا رہے ہیں..."}
+            </p>
+          </div>
+        ) : filteredPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPosts.map((post) => {
               const pTitle = lang === "en" ? post.title.en : post.title.ur;
