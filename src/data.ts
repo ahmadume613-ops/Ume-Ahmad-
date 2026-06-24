@@ -5,7 +5,7 @@ export const initialAcademyConfig: AcademyConfig = {
   taglineEn: "Learn Quran Online with Proper Tajweed & Translation from Certified Instructors",
   taglineUr: "گھر بیٹھے تجربہ کار اساتذہ سے تجوید و ترجمہ کے ساتھ آن لائن قرآن پاک سیکھیں",
   taglineRoman: "Ghar baithe tajarbakor asateza se Tajweed o Tarjuma k sath online Quran Seekhain",
-  email: "glowwithmeenu@gmail.com",
+  email: "ahmadume613@gmail.com",
   whatsapp: "+923345750157",
   phone: "+92 334 5750157",
   facebookUrl: "https://facebook.com",
@@ -139,7 +139,7 @@ export const initialPricingPlans: PricingPlan[] = [
     daysPerWeek: 3,
     classesPerMonth: 12,
     priceUSD: 45,
-    isPopular: true, // Most popular banner
+    isPopular: false, // Most popular banner
     featuresEn: [
       "3 Days a week (12 classes monthly)",
       "30 Minutes class duration",
@@ -172,34 +172,34 @@ export const initialPricingPlans: PricingPlan[] = [
     id: "plan-5d",
     daysPerWeek: 5,
     classesPerMonth: 20,
-    priceUSD: 70,
-    isPopular: false,
+    priceUSD: 50,
+    isPopular: true,
     featuresEn: [
+      "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
+      "10% Flat Sibling Discount Available!",
       "5 Days a week (20 classes monthly)",
       "30 Minutes class duration",
       "Perfect for fast learners & Hifz",
       "1-on-1 intensive attention",
-      "Male/Female qualified tutors",
-      "Free 3 days trial classes",
-      "Quranic recitation evaluation"
+      "Free 3 days trial classes"
     ],
     featuresUr: [
+      "ناظرہ قرآن اور تجوید کورس ($50/ماہ، ہفتے میں 5 دن)",
+      "10 فیصد فلیٹ سبلنگ (بہن بھائی) ڈسکاؤنٹ!",
       "ہفتے میں 5 دن (مہینے میں 20 کلاسز)",
       "ہر کلاس کا دورانیہ 30 منٹ",
       "تیز رفتار سیکھنے اور حفظ کے لیے بہترین",
       "انفرادی 1-on-1 خصوصی توجہ",
-      "اہل مرد اور خواتین اساتذہ",
-      "3 دن کی بالکل مفت ٹرائل کلاس",
-      "تلاوت اور مخارج کی تفصیلی جانچ"
+      "3 دن کی بالکل مفت ٹرائل کلاس"
     ],
     featuresRoman: [
+      "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
+      "10% Flat Sibling Discount Available!",
       "Haftey me 5 din (20 classes monthly)",
       "30 mins class duration",
       "Fast learning aur Hifz ke liye best",
       "1-on-1 intensive guidance",
-      "Male & Female expert teachers",
-      "3 Days free trial classes",
-      "Monthly special evaluations"
+      "3 Days free trial classes"
     ]
   },
   {

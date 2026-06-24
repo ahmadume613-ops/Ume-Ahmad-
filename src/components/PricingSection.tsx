@@ -92,7 +92,6 @@ export default function PricingSection({ plans, lang, onSelectPlan }: PricingSec
           classesPerMonth: 12,
           priceUSD: 40,
           badge: { en: "Most Popular", ur: "سب سے مقبول", roman: "Most Popular" },
-          isPopularPlan: true,
           features: {
             en: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Monthly Progress Reports", "Noorani Qaida & Nazra Quran"],
             ur: ["ہفتے میں 3 کلاسیں (12 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند مرد و خواتین اساتذہ", "ماہانہ کارکردگی رپورٹ", "نورانی قاعدہ وہ ناظرہ تلاوت"],
@@ -103,12 +102,34 @@ export default function PricingSection({ plans, lang, onSelectPlan }: PricingSec
           id: "qaida-5",
           daysPerWeek: 5,
           classesPerMonth: 20,
-          priceUSD: 60,
-          badge: { en: "Intensive", ur: "تیز رفتار ترقی", roman: "Intensive" },
+          priceUSD: 50,
+          badge: { en: "Most Recommended", ur: "انتہائی تجویز کردہ", roman: "Most Recommended" },
+          isPopularPlan: true,
           features: {
-            en: ["5 Classes Per Week (20 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Rapid Syllabus Progression", "Customized Revision Sheets"],
-            ur: ["ہفتے میں 5 کلاسیں (20 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند مرد و خواتین اساتذہ", "تیز ترین نصابی ترقی", "خصوصی دہرائی کے طریقے"],
-            roman: ["5 Classes Per Week (20 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Rapid Syllabus Progression", "Customized Revision Sheets"]
+            en: [
+              "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
+              "10% Flat Sibling Discount Available!",
+              "5 Classes Per Week (20 Monthly)",
+              "30 Mins Live Lessons",
+              "1-on-1 Personalized Care",
+              "Certified Male/Female Tutors"
+            ],
+            ur: [
+              "ناظرہ قرآن اور تجوید کورس ($50/ماہ، ہفتے میں 5 دن)",
+              "10 فیصد فلیٹ سبلنگ (بہن بھائی) خصوصی ڈسکاؤنٹ!",
+              "ہفتے میں 5 کلاسیں (20 ماہانہ)",
+              "30 منٹ لائیو فیس ٹو فیس",
+              "انفرادی 1-on-1 توجہ",
+              "مستند اساتذہ"
+            ],
+            roman: [
+              "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
+              "10% Flat Sibling Discount Available!",
+              "5 Classes Per Week (20 Monthly)",
+              "30 Mins Live Lessons",
+              "1-on-1 Personalized Care",
+              "Certified Male/Female Tutors"
+            ]
           }
         },
         {
@@ -155,9 +176,8 @@ export default function PricingSection({ plans, lang, onSelectPlan }: PricingSec
           id: "tajweed-3",
           daysPerWeek: 3,
           classesPerMonth: 12,
-          priceUSD: 50,
+          priceUSD: 45,
           badge: { en: "Best Progress", ur: "شاندار انتخاب", roman: "Best Progress" },
-          isPopularPlan: true,
           features: {
             en: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Beautiful Recitation (Tarteel)", "Basic Islamic Morals Included"],
             ur: ["ہفتے میں 3 کلاسیں (12 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند مرد و خواتین اساتذہ", "حسنِ قرائت اور ترتیل کی مشق", "بنیادی اسلامی تعلیمات شامل"],
@@ -168,12 +188,34 @@ export default function PricingSection({ plans, lang, onSelectPlan }: PricingSec
           id: "tajweed-5",
           daysPerWeek: 5,
           classesPerMonth: 20,
-          priceUSD: 70,
-          badge: { en: "Fluency Pro", ur: "روانی پرو", roman: "Fluency Pro" },
+          priceUSD: 50,
+          badge: { en: "Most Recommended", ur: "انتہائی تجویز کردہ", roman: "Most Recommended" },
+          isPopularPlan: true,
           features: {
-            en: ["5 Classes Per Week (20 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Full Tarteel & Fluency Practice", "Certification Pathway Assessment"],
-            ur: ["ہفتے میں 5 کلاسیں (20 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند مرد و خواتین اساتذہ", "روانی کے ساتھ مکمل مشق", "سرٹیفکیٹ کی تیاری کا ٹیسٹ"],
-            roman: ["5 Classes Per Week (20 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Full Tarteel & Fluency Practice", "Certification Pathway Assessment"]
+            en: [
+              "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
+              "10% Flat Sibling Discount Available!",
+              "5 Classes Per Week (20 Monthly)",
+              "30 Mins Live Lessons",
+              "1-on-1 Personalized Care",
+              "Certified Male/Female Tutors"
+            ],
+            ur: [
+              "ناظرہ قرآن اور تجوید کورس ($50/ماہ، ہفتے میں 5 دن)",
+              "10 فیصد فلیٹ سبلنگ (بہن بھائی) خصوصی ڈسکاؤنٹ!",
+              "ہفتے میں 5 کلاسیں (20 ماہانہ)",
+              "30 منٹ لائیو فیس ٹو فیس",
+              "انفرادی 1-on-1 توجہ",
+              "مستند اساتذہ"
+            ],
+            roman: [
+              "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
+              "10% Flat Sibling Discount Available!",
+              "5 Classes Per Week (20 Monthly)",
+              "30 Mins Live Lessons",
+              "1-on-1 Personalized Care",
+              "Certified Male/Female Tutors"
+            ]
           }
         }
       ]
