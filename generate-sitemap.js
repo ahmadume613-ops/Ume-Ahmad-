@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { createClient } from "@sanity/client";
 import dotenv from "dotenv";
 
 // Load local environment variables from .env if present
@@ -31,11 +30,14 @@ async function generateSitemap() {
   // 2. Fetch blog posts from Sanity if configured
   if (projectId && projectId !== "your_project_id") {
     try {
+      // Dynamically import @sanity/client to prevent strict module failures during local execution
+      const { createClient } = await import("@sanity/client");
+      
       const client = createClient({
         projectId: projectId,
         dataset: dataset,
         apiVersion: apiVersion,
-        useCdn: false // Don't use CDN to get absolute freshest posts during build
+        useCdn: false // Don't use CDN to get freshest posts during build
       });
 
       const query = `*[_type == "blog" && defined(slug.current)] {

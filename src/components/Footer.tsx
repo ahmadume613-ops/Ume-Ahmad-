@@ -1,116 +1,143 @@
-import { LanguageMode, AcademyConfig, Course } from "../types";
-import { Mail, Phone, Globe, ChevronRight } from "lucide-react";
-import logoImg from "../assets/images/quran_academy_logo_1782168948648.jpg";
+import React from "react";
+import { Mail, Phone, MapPin, ShieldCheck, Star, BookOpen } from "lucide-react";
 
 interface FooterProps {
-  activePage: string;
   onPageChange: (page: string) => void;
-  config: AcademyConfig;
-  courses: Course[];
-  lang: LanguageMode;
-  onAdminOpen: () => void;
+  language: string;
 }
 
-export default function Footer({
-  activePage,
-  onPageChange,
-  config,
-  courses,
-  lang,
-  onAdminOpen
-}: FooterProps) {
-  const handleNavClick = (pageId: string) => {
-    window.location.hash = `#${pageId}`;
+export default function Footer({ onPageChange, language }: FooterProps) {
+  const currentYear = new Date().getFullYear();
+
+  const headings = {
+    about: { en: "About Academy", ar: "عن الأكاديمية", ur: "اکیڈمی کے بارے میں", fr: "À propos", de: "Über uns" },
+    quick: { en: "Quick Navigation", ar: "روابط سريعة", ur: "روابط", fr: "Navigation", de: "Navigation" },
+    courses: { en: "Our Courses", ar: "دوراتنا", ur: "ہمارے کورسز", fr: "Nos Cours", de: "Unsere Kurse" },
+    contact: { en: "Get In Touch", ar: "اتصل بنا", ur: "رابطہ کریں", fr: "Contact", de: "Kontakt" }
   };
 
-  const menuItems = [
-    { id: "home", label: { en: "Home Overview", ur: "ہوم پیج", roman: "Home Overview" } },
-    { id: "courses", label: { en: "Our Courses", ur: "کورسز تفصیل", roman: "Our Courses" } },
-    { id: "prices", label: { en: "Fee Structure", ur: "فیس پیکجز", roman: "Fee Structure" } },
-    { id: "about", label: { en: "About Our Academy", ur: "ہمارے بارے میں", roman: "About Our Academy" } },
-    { id: "blog", label: { en: "Informative Articles", ur: "بلاگ مضامین", roman: "Informative Articles" } },
-    { id: "contact", label: { en: "Register / Contact", ur: "رابطہ و رجسٹریشن", roman: "Register & Contact" } }
-  ];
+  const getHeading = (key: keyof typeof headings) => {
+    return headings[key][language as keyof typeof headings[typeof key]] || headings[key].en;
+  };
 
   return (
-    <footer id="main-footer" className="bg-slate-900 text-slate-350 pt-16 pb-8 border-t border-slate-800 mt-auto relative font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-10 pb-12 border-b border-slate-800">
-        
-        {/* Col 1: Brand Info */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => handleNavClick("home")}>
-            <img 
-              src={logoImg} 
-              alt="Academy Footer Logo Badge" 
-              referrerPolicy="no-referrer"
-              className="w-9 h-9 rounded-full border border-emerald-500/35 shadow-sm pointer-events-none"
-            />
-            <span className="font-serif font-bold text-base tracking-wide text-white">{config.name}</span>
+    <footer className="bg-emerald-950 text-emerald-100 border-t border-emerald-900 pt-16 pb-8" id="main-footer">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12" id="footer-grid">
+          
+          {/* About Column */}
+          <div className="space-y-4" id="footer-about-col">
+            <div className="flex items-center">
+              <img
+                src="/src/assets/images/67802_1782393985463.jpg"
+                alt="Worldwide Quran Academy Logo"
+                className="w-10 h-10 object-contain rounded-xl mr-3 shadow-md border border-emerald-700/10"
+                referrerPolicy="no-referrer"
+              />
+              <h2 className="text-lg font-bold text-white tracking-tight">Worldwide Quran Academy</h2>
+            </div>
+            <p className="text-sm text-emerald-200/80 leading-relaxed font-sans">
+              Learn the Holy Quran from the comfort of your home with certified, skilled, and gentle Arab & Pakistani tutors. We offer standard 1-on-1 online Tajweed classes for all age groups.
+            </p>
+            <div className="flex items-center gap-1.5 pt-2">
+              <div className="flex text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400 stroke-amber-400" />
+                ))}
+              </div>
+              <span className="text-xs font-semibold text-white">4.9 on Trustpilot</span>
+            </div>
           </div>
-          <p className="text-slate-400 text-xs leading-relaxed min-h-[3rem]">
-            {lang === "en" ? config.aboutEn : lang === "ur" ? config.aboutUr : config.aboutRoman}
-          </p>
-        </div>
 
-        {/* Col 2: Quick Links */}
-        <div className="space-y-3">
-          <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Quick Navigation</h4>
-          <ul className="text-xs text-slate-400 space-y-2.5">
-            {menuItems.map((item) => (
-              <li key={item.id} className="flex items-center gap-2">
-                <ChevronRight className="w-3.5 h-3.5 text-emerald-500" />
-                <button
-                  onClick={() => handleNavClick(item.id)}
-                  className={`hover:text-white transition-colors cursor-pointer font-semibold text-left ${
-                    activePage === item.id ? "text-emerald-400" : "text-slate-400"
-                  }`}
-                >
-                  {item.label[lang]}
-                </button>
+          {/* Quick Links Column */}
+          <div id="footer-quick-links-col">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-emerald-800 pb-2 mb-4">
+              {getHeading("quick")}
+            </h3>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                { id: "home", label: "Home" },
+                { id: "courses", label: "Courses" },
+                { id: "prices", label: "Pricing & Plans" },
+                { id: "about", label: "About Us" },
+                { id: "contact", label: "Contact Us" },
+                { id: "blog", label: "Islamic Blog" }
+              ].map((link) => (
+                <li key={link.id}>
+                  <button
+                    onClick={() => onPageChange(link.id)}
+                    className="text-emerald-200/80 hover:text-white transition-colors hover:translate-x-1 duration-150 transform inline-block"
+                  >
+                    {link.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Courses Column */}
+          <div id="footer-courses-col">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-emerald-800 pb-2 mb-4">
+              {getHeading("courses")}
+            </h3>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                { label: "Noorani Qaida", id: "courses" },
+                { label: "Tajweed Rules Mastery", id: "courses" },
+                { label: "Quran Recitation with Tajweed", id: "courses" },
+                { label: "Holy Quran Memorization (Hifz)", id: "courses" },
+                { label: "Islamic Studies & Duas", id: "courses" }
+              ].map((c, idx) => (
+                <li key={idx}>
+                  <button
+                    onClick={() => onPageChange(c.id)}
+                    className="text-emerald-200/80 hover:text-white transition-colors hover:translate-x-1 duration-150 transform inline-block"
+                  >
+                    {c.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Column */}
+          <div className="space-y-4" id="footer-contact-col">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-emerald-800 pb-2 mb-4">
+              {getHeading("contact")}
+            </h3>
+            <ul className="space-y-3.5 text-sm">
+              <li className="flex items-start gap-3">
+                <Mail className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                <span className="text-emerald-200/80">ahmadume613@gmail.com</span>
               </li>
-            ))}
-          </ul>
+              <li className="flex items-start gap-3">
+                <Phone className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                <span className="text-emerald-200/80">+92 334 5750157 (WhatsApp)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                <span className="text-emerald-200/80">Rawalpindi / Islamabad, Pakistan</span>
+              </li>
+            </ul>
+
+            <div className="pt-3 border-t border-emerald-900 flex items-center gap-2 text-emerald-300">
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              <span className="text-xs">Safe & Secure 1-on-1 Video Portal</span>
+            </div>
+          </div>
+
         </div>
 
-        {/* Col 3: Contact Details */}
-        <div className="space-y-3">
-          <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Connect With Us</h4>
-          <ul className="text-xs text-slate-400 space-y-3">
-            <li className="flex items-center gap-2.5">
-              <Mail className="w-4 h-4 text-emerald-500" />
-              <span className="text-slate-350">{config.email}</span>
-            </li>
-            <li className="flex items-center gap-2.5 font-bold">
-              <Phone className="w-4 h-4 text-emerald-500" />
-              <span className="text-emerald-300">Call/WhatsApp: {config.phone}</span>
-            </li>
-            <li className="flex items-center gap-2.5">
-              <Globe className="w-4 h-4 text-emerald-500" />
-              <span>Online Live Class Portal Available 24/7</span>
-            </li>
-          </ul>
-        </div>
-
-      </div>
-
-      {/* Bottom bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-400">
-        <p className="text-xs text-center md:text-left">
-          © {new Date().getFullYear()} {config.name}. All Rights Reserved. Online Islamic Academy 1-on-1 Classes.
-        </p>
-        <div className="flex gap-4 items-center flex-wrap justify-center">
-          <a href={config.facebookUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors text-xs">
-            Facebook
-          </a>
-          <a href={config.youtubeUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors text-xs">
-            YouTube
-          </a>
-          <button 
-            onClick={onAdminOpen}
-            className="text-emerald-400 hover:text-emerald-300 hover:bg-white/5 transition-colors text-xs font-bold flex items-center gap-1.5 cursor-pointer bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700/50"
-          >
-            ⚙ Customizer Login
-          </button>
+        {/* Divider & Copyright */}
+        <div className="mt-16 pt-8 border-t border-emerald-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-emerald-300/60" id="footer-bottom-meta">
+          <p>© {currentYear} Worldwide Quran Academy. All Rights Reserved.</p>
+          <div className="flex gap-6">
+            <button className="hover:text-white transition-colors">Privacy Policy</button>
+            <button className="hover:text-white transition-colors">Terms of Service</button>
+            <button onClick={() => onPageChange("admin")} className="hover:text-white transition-colors font-semibold underline">
+              Admin Area
+            </button>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,57 +1,49 @@
-export interface AcademyConfig {
-  name: string;
-  taglineEn: string;
-  taglineUr: string;
-  taglineRoman: string;
-  email: string;
-  whatsapp: string;
-  phone: string;
-  facebookUrl: string;
-  youtubeUrl: string;
-  aboutEn: string;
-  aboutUr: string;
-  aboutRoman: string;
-}
-
 export interface Course {
   id: string;
-  titleEn: string;
-  titleUr: string;
-  titleRoman: string;
-  descriptionEn: string;
-  descriptionUr: string;
-  descriptionRoman: string;
-  featuresEn: string[];
-  featuresUr: string[];
-  featuresRoman: string[];
-  iconName: string; // Dynamic Lucide Icon
-  recommendedAge: string;
+  title: string;
+  description: string;
+  duration: string;
+  level: "Beginner" | "Intermediate" | "Advanced" | "All Levels";
+  image: string;
+  features: string[];
 }
+
+export type CurrencyCode = "USD" | "GBP" | "EUR" | "CAD" | "AUD" | "AED" | "SAR";
 
 export interface PricingPlan {
   id: string;
-  daysPerWeek: number; // e.g. 2 days, 3 days, 5 days
-  classesPerMonth: number; // e.g. 8, 12, 20
+  name: string;
+  daysPerWeek: number;
+  classesPerMonth: number;
   priceUSD: number;
-  isPopular: boolean;
-  featuresEn: string[];
-  featuresUr: string[];
-  featuresRoman: string[];
+  priceGBP: number;
+  priceEUR: number;
+  priceCAD: number;
+  priceAUD: number;
+  priceAED: number;
+  priceSAR: number;
+  durationPerClass: string;
+  recommended: boolean;
+  features: string[];
+}
+
+export interface BlogPost {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  publishedAt: string;
+  excerpt: string;
+  body: string;
+  author: string;
 }
 
 export interface TrialBooking {
-  id: string;
-  fullName: string;
-  age: string;
+  studentName: string;
   parentName?: string;
   email: string;
   whatsapp: string;
+  country: string;
   courseId: string;
-  timeZone: string;
-  preferredDays: string[];
-  preferredTimeSlot: string;
-  status: "pending" | "approved" | "completed";
-  createdAt: string;
+  preferredTime: string;
+  notes?: string;
 }
-
-export type LanguageMode = "en" | "ur" | "roman";

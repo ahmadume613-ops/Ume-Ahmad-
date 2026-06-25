@@ -1,749 +1,440 @@
-import { useState, useEffect } from "react";
-import { PricingPlan, LanguageMode } from "../types";
-import { 
-  Check, Percent, Sparkles, BookOpen, Mic, Award, 
-  Globe, Smile, MessageCircle, ArrowRight, ShieldCheck, 
-  Clock, Heart, Star, Crown, Layers, Calendar
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Check, Star, Zap, User, Users, Calculator, Info, Calendar } from "lucide-react";
+import { motion } from "motion/react";
+import { PRICING_PLANS_1ON1, PRICING_PLANS_GROUP } from "../data";
+import { PricingPlan, CurrencyCode } from "../types";
 
 interface PricingSectionProps {
-  plans: PricingPlan[];
-  lang: LanguageMode;
-  onSelectPlan: (daysPerWeek: number) => void;
+  currency: CurrencyCode;
+  onSelectPlan: (planName: string) => void;
+  language: string;
+  initialClassMode?: "1on1" | "group";
+  onClassModeChange?: (mode: "1on1" | "group") => void;
+  onCurrencyChange?: (currency: CurrencyCode) => void;
 }
 
-interface PlanItem {
-  id: string;
-  daysPerWeek: number;
-  classesPerMonth?: number;
-  priceUSD: number;
-  badge: { en: string; ur: string; roman: string };
-  isPopularPlan?: boolean;
-  isWeekend?: boolean;
-  isCustom?: boolean;
-  features: {
-    en: string[];
-    ur: string[];
-    roman: string[];
-  };
-}
+export default function PricingSection({
+  currency,
+  onSelectPlan,
+  language,
+  initialClassMode = "1on1",
+  onClassModeChange,
+  onCurrencyChange
+}: PricingSectionProps) {
+  const [localClassMode, setLocalClassMode] = useState<"1on1" | "group">("1on1");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly">("monthly");
+  
+  // Local state for calculator frequency selector (defaults to 3 days/week)
+  const [calcDaysPerWeek, setCalcDaysPerWeek] = useState<number>(3);
 
-interface CoursePricing {
-  title: { en: string; ur: string; roman: string };
-  subtitle: { en: string; ur: string; roman: string };
-  isPopular?: boolean;
-  icon: any;
-  plans: PlanItem[];
-}
+  // Sync state between props and local if parent passes them
+  const classMode = onClassModeChange ? initialClassMode : localClassMode;
+  const setClassMode = onClassModeChange ? onClassModeChange : setLocalClassMode;
 
-export default function PricingSection({ plans, lang, onSelectPlan }: PricingSectionProps) {
-  // Course selection tabs:
-  const [activeTab, setActiveTab] = useState<string>("qaida");
+  const plans = classMode === "1on1" ? PRICING_PLANS_1ON1 : PRICING_PLANS_GROUP;
 
-  // Read saved config from localStorage to get live WhatsApp number if customized, else default to +923345750157
-  const [activeWhatsapp, setActiveWhatsapp] = useState<string>("+92 334 5750157");
-
+  // Make sure calcDaysPerWeek is valid for group mode (Group only has 2, 3, 5)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("quran_academy_config");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.phone) {
-          setActiveWhatsapp(parsed.phone);
-        } else if (parsed.whatsapp) {
-          setActiveWhatsapp(parsed.whatsapp);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load active WhatsApp from localStorage", e);
+    if (classMode === "group" && calcDaysPerWeek === 4) {
+      setCalcDaysPerWeek(5);
     }
-  }, []);
+  }, [classMode, calcDaysPerWeek]);
 
-  const coursesPricingData: Record<string, CoursePricing> = {
-    qaida: {
-      title: {
-        en: "Noorani Qaida & Quran Nazra",
-        ur: "نورانی قاعدہ اور ناظرہ قرآن",
-        roman: "Noorani Qaida & Quran Nazra"
-      },
-      subtitle: {
-        en: "Highly recommended for kids and absolute beginners.",
-        ur: "بچوں اور بنیادی سیکھنے والوں کے لیے سب سے بہترین کورس۔",
-        roman: "Bacho aur shuruat krne walo k liye nihayat zaroori."
-      },
-      isPopular: true,
-      icon: BookOpen,
-      plans: [
-        {
-          id: "qaida-2",
-          daysPerWeek: 2,
-          classesPerMonth: 8,
-          priceUSD: 30,
-          badge: { en: "Starter Pack", ur: "مبتدی پیک", roman: "Starter Pack" },
-          features: {
-            en: ["2 Classes Per Week (8 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Basic Qaida Phonics Included"],
-            ur: ["ہفتے میں 2 کلاسیں (8 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند مرد و خواتین اساتذہ", "بنیادی قاعدہ تجوید کے ساتھ"],
-            roman: ["2 Classes Per Week (8 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Basic Qaida Phonics Included"]
-          }
-        },
-        {
-          id: "qaida-3",
-          daysPerWeek: 3,
-          classesPerMonth: 12,
-          priceUSD: 40,
-          badge: { en: "Most Popular", ur: "سب سے مقبول", roman: "Most Popular" },
-          features: {
-            en: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Monthly Progress Reports", "Noorani Qaida & Nazra Quran"],
-            ur: ["ہفتے میں 3 کلاسیں (12 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند مرد و خواتین اساتذہ", "ماہانہ کارکردگی رپورٹ", "نورانی قاعدہ وہ ناظرہ تلاوت"],
-            roman: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Monthly Progress Reports", "Noorani Qaida & Nazra Quran"]
-          }
-        },
-        {
-          id: "qaida-5",
-          daysPerWeek: 5,
-          classesPerMonth: 20,
-          priceUSD: 50,
-          badge: { en: "Most Recommended", ur: "انتہائی تجویز کردہ", roman: "Most Recommended" },
-          isPopularPlan: true,
-          features: {
-            en: [
-              "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
-              "10% Flat Sibling Discount Available!",
-              "5 Classes Per Week (20 Monthly)",
-              "30 Mins Live Lessons",
-              "1-on-1 Personalized Care",
-              "Certified Male/Female Tutors"
-            ],
-            ur: [
-              "ناظرہ قرآن اور تجوید کورس ($50/ماہ، ہفتے میں 5 دن)",
-              "10 فیصد فلیٹ سبلنگ (بہن بھائی) خصوصی ڈسکاؤنٹ!",
-              "ہفتے میں 5 کلاسیں (20 ماہانہ)",
-              "30 منٹ لائیو فیس ٹو فیس",
-              "انفرادی 1-on-1 توجہ",
-              "مستند اساتذہ"
-            ],
-            roman: [
-              "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
-              "10% Flat Sibling Discount Available!",
-              "5 Classes Per Week (20 Monthly)",
-              "30 Mins Live Lessons",
-              "1-on-1 Personalized Care",
-              "Certified Male/Female Tutors"
-            ]
-          }
-        },
-        {
-          id: "qaida-weekend",
-          daysPerWeek: 2,
-          classesPerMonth: 8,
-          priceUSD: 35,
-          badge: { en: "Weekend Special", ur: "ہفتہ وار کلاسز", roman: "Weekend Special" },
-          isWeekend: true,
-          features: {
-            en: ["Saturday & Sunday Only", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Flexible Weekend Timings", "Tajweed & Qaida Revision"],
-            ur: ["صرف ہفتہ اور اتوار کلاسز", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند مرد و خواتین اساتذہ", "ہفتہ وار لچکدار اوقات", "تجوید و قاعدہ فہم"],
-            roman: ["Saturday & Sunday Only", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Flexible Weekend Timings", "Tajweed & Qaida Revision"]
-          }
-        }
-      ]
-    },
-    tajweed: {
-      title: {
-        en: "Quran Recitation with Tajweed",
-        ur: "تجوید القرآن کورس",
-        roman: "Quran with Tajweed"
-      },
-      subtitle: {
-        en: "Perfect your recitation with precise Arabic accent & stop signs.",
-        ur: "عربی مخارج، مد اور وقف کے قواعد کے ساتھ قرآن کی تلاوت درست کریں۔",
-        roman: "Arabic Makharij, Madd aur Waqf rules k sath tilaawat darust krein."
-      },
-      icon: Mic,
-      plans: [
-        {
-          id: "tajweed-2",
-          daysPerWeek: 2,
-          classesPerMonth: 8,
-          priceUSD: 35,
-          badge: { en: "Standard", ur: "معیاری پیک", roman: "Standard" },
-          features: {
-            en: ["2 Classes Per Week (8 Monthly)", "30 Mins Live Lessons", "1-on-1 Personal Care", "Certified Tutors", "Makharij & Accent Correction", "Rules of Noon/Meem Sakinah"],
-            ur: ["ہفتے میں 2 کلاسیں (8 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند اساتذہ", "مخارج اور لہجے کی تصحیح", "نون اور میم ساکن کے قواعد"],
-            roman: ["2 Classes Per Week (8 Monthly)", "30 Mins Live Lessons", "1-on-1 Personal Care", "Certified Tutors", "Makharij & Accent Correction", "Rules of Noon/Meem Sakinah"]
-          }
-        },
-        {
-          id: "tajweed-3",
-          daysPerWeek: 3,
-          classesPerMonth: 12,
-          priceUSD: 45,
-          badge: { en: "Best Progress", ur: "شاندار انتخاب", roman: "Best Progress" },
-          features: {
-            en: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Beautiful Recitation (Tarteel)", "Basic Islamic Morals Included"],
-            ur: ["ہفتے میں 3 کلاسیں (12 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 توجہ", "مستند مرد و خواتین اساتذہ", "حسنِ قرائت اور ترتیل کی مشق", "بنیادی اسلامی تعلیمات شامل"],
-            roman: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Personalized Care", "Certified Male/Female Tutors", "Beautiful Recitation (Tarteel)", "Basic Islamic Morals Included"]
-          }
-        },
-        {
-          id: "tajweed-5",
-          daysPerWeek: 5,
-          classesPerMonth: 20,
-          priceUSD: 50,
-          badge: { en: "Most Recommended", ur: "انتہائی تجویز کردہ", roman: "Most Recommended" },
-          isPopularPlan: true,
-          features: {
-            en: [
-              "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
-              "10% Flat Sibling Discount Available!",
-              "5 Classes Per Week (20 Monthly)",
-              "30 Mins Live Lessons",
-              "1-on-1 Personalized Care",
-              "Certified Male/Female Tutors"
-            ],
-            ur: [
-              "ناظرہ قرآن اور تجوید کورس ($50/ماہ، ہفتے میں 5 دن)",
-              "10 فیصد فلیٹ سبلنگ (بہن بھائی) خصوصی ڈسکاؤنٹ!",
-              "ہفتے میں 5 کلاسیں (20 ماہانہ)",
-              "30 منٹ لائیو فیس ٹو فیس",
-              "انفرادی 1-on-1 توجہ",
-              "مستند اساتذہ"
-            ],
-            roman: [
-              "Nazra Quran & Tajweed Course ($50/month, 5 Days a Week)",
-              "10% Flat Sibling Discount Available!",
-              "5 Classes Per Week (20 Monthly)",
-              "30 Mins Live Lessons",
-              "1-on-1 Personalized Care",
-              "Certified Male/Female Tutors"
-            ]
-          }
-        }
-      ]
-    },
-    hifz: {
-      title: {
-        en: "Quran Memorization (Hifz)",
-        ur: "حفظِ قرآن مجید",
-        roman: "Quran Memorization (Hifz)"
-      },
-      subtitle: {
-        en: "Commit the holy Quran to your heart with structured lessons.",
-        ur: "ایک منظم منزل، سبق اور سبقہ کے جدول کے ساتھ قرآن حفظ کیجئے۔",
-        roman: "Ek behtareen schedule ke zariye Quran dil me mehfooz krein."
-      },
-      icon: Award,
-      plans: [
-        {
-          id: "hifz-3",
-          daysPerWeek: 3,
-          classesPerMonth: 12,
-          priceUSD: 60,
-          badge: { en: "Hifz Basic", ur: "بنیادی حفظ", roman: "Hifz Basic" },
-          features: {
-            en: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Specialized Huffaz", "Personalized Memorization Plan", "Surah Memorization Tracker", "Daily revision of Sabqi portion"],
-            ur: ["ہفتے میں 3 کلاسیں (12 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 حافظ استاد", "خصوصی حفظ پلان", "سورتوں کا ٹریکر", "روزانہ سبقی حصے کی دہرائی"],
-            roman: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Specialized Huffaz", "Personalized Memorization Plan", "Surah Memorization Tracker", "Daily revision of Sabqi portion"]
-          }
-        },
-        {
-          id: "hifz-5",
-          daysPerWeek: 5,
-          classesPerMonth: 20,
-          priceUSD: 90,
-          badge: { en: "Full Hifz Track", ur: "مکمل منزل ٹریک", roman: "Full Hifz Track" },
-          isPopularPlan: true,
-          features: {
-            en: ["5 Classes Per Week (20 Monthly)", "30 Mins Live Lessons", "1-on-1 Specialized Huffaz", "Rigorous revision schedule", "Sabaq, Sabqi & Manzil tracking", "Quran recitation voice training"],
-            ur: ["ہفتے میں 5 کلاسیں (20 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی 1-on-1 حافظ استاد", "سخت دہرائی کا نظام", "سبق، سبقہ اور منزل کی مشق", "خوبصورت قرائت کی زبردست مشق"],
-            roman: ["5 Classes Per Week (20 Monthly)", "30 Mins Live Lessons", "1-on-1 Specialized Huffaz", "Rigorous revision schedule", "Sabaq, Sabqi & Manzil tracking", "Quran recitation voice training"]
-          }
-        }
-      ]
-    },
-    translation: {
-      title: {
-        en: "Translation & Islamic Studies",
-        ur: "قرآن ترجمہ و اسلامی تعلیمی کورس",
-        roman: "Quran Translation & Islamic Studies"
-      },
-      subtitle: {
-        en: "Learn word-by-word Arabic translation, tafseer, and deeni values.",
-        ur: "عربی زبان کے گرامر، الفاظ کے معانی، آیات کی تفسیر اور اسلامی طرزِ زندگی سیکھیں۔",
-        roman: "Arabic vocabulary, Translation, Tafseer aur Islamic rules seekhein."
-      },
-      icon: Globe,
-      plans: [
-        {
-          id: "trans-2",
-          daysPerWeek: 2,
-          classesPerMonth: 8,
-          priceUSD: 40,
-          badge: { en: "Standard", ur: "معیاری", roman: "Standard" },
-          features: {
-            en: ["2 Classes Per Week (8 Monthly)", "30 Mins Live Lessons", "1-on-1 Islamic Scholars", "Word-for-Word translation", "Basic Quranic grammar", "Practical rules for life"],
-            ur: ["ہفتے میں 2 کلاسیں (8 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی علمائے دین اساتذہ", "لفظ بہ لفظ آسان ترجمہ", "بنیادی قرآنی گرامر", "عملی زندگی کے قرآنی آداب"],
-            roman: ["2 Classes Per Week (8 Monthly)", "30 Mins Live Lessons", "1-on-1 Islamic Scholars", "Word-for-Word translation", "Basic Quranic grammar", "Practical rules for life"]
-          }
-        },
-        {
-          id: "trans-3",
-          daysPerWeek: 3,
-          classesPerMonth: 12,
-          priceUSD: 55,
-          badge: { en: "Alim Student", ur: "ترجیحی انتخاب", roman: "Alim Student" },
-          isPopularPlan: true,
-          features: {
-            en: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Scholar Tutors", "Historical details of revelation", "Intermediate Arabic syntax", "Tafseer of selected Surahs"],
-            ur: ["ہفتے میں 3 کلاسیں (12 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی عالمِ دین استاد", "شانِ نزول اور تاریخی پس منظر", "درمیانی عربی گرامر کی کتب", "منتخب سورتوں کی تفسیر"],
-            roman: ["3 Classes Per Week (12 Monthly)", "30 Mins Live Lessons", "1-on-1 Scholar Tutors", "Historical details of revelation", "Intermediate Arabic syntax", "Tafseer of selected Surahs"]
-          }
-        },
-        {
-          id: "trans-5",
-          daysPerWeek: 5,
-          classesPerMonth: 20,
-          priceUSD: 75,
-          badge: { en: "Comprehensive", ur: "جامع عالم کورس", roman: "Comprehensive" },
-          features: {
-            en: ["5 Classes Per Week (20 Monthly)", "30 Mins Live Lessons", "1-on-1 Scholar Tutors", "Deep theological evaluation", "Seerah of Prophet (PBUH) in-depth", "Ahadith studies & Hadith selection"],
-            ur: ["ہفتے میں 5 کلاسیں (20 ماہانہ)", "30 منٹ لائیو فیس ٹو فیس", "انفرادی عالمِ دین استاد", "عقائد، فقہ اور گہری فہم", "سیرتِ رسول کا تفصیلی نصاب", "منتخب احادیثِ مبارکہ کا دورہ"],
-            roman: ["5 Classes Per Week (20 Monthly)", "30 Mins Live Lessons", "1-on-1 Scholar Tutors", "Deep theological evaluation", "Seerah of Prophet (PBUH) in-depth", "Ahadith studies & Hadith selection"]
-          }
-        }
-      ]
-    },
-    kids: {
-      title: {
-        en: "Kids Islamic Studies Program",
-        ur: "بچوں کا اسلامی تربیتی پروگرام",
-        roman: "Kids Islamic Studies Program"
-      },
-      subtitle: {
-        en: "A beautiful, interactive foundation course designed for young Muslims abroad.",
-        ur: "بیرونِ ملک مقیم مسلمان بچوں کے لیے شاندار اسلامی عقائد اور آداب پر مشتمل نصاب۔",
-        roman: "Bahar k mulko me rehne wale bacho k liye elegant islamic manners course."
-      },
-      icon: Smile,
-      plans: [
-        {
-          id: "kids-flat",
-          daysPerWeek: 2,
-          classesPerMonth: 8,
-          priceUSD: 35,
-          badge: { en: "All-In-One Kids", ur: "بچوں کا مکمل پیکج", roman: "All-in-One Kids" },
-          isPopularPlan: true,
-          features: {
-            en: [
-              "Duas (Daily Musnoon Supplications)",
-              "Kalmas (Six Kalimas with translation)",
-              "Salah (Step-by-step Wudu & Prayer method)",
-              "Islamic Manners & Social Etiquettes",
-              "Seerah for Kids (Stories of Prophets)",
-              "1-on-1 Highly patient friendly teachers",
-              "Interactive games & quiz sheets"
-            ],
-            ur: [
-              "مسنون دعائیں (روزمرہ سونے جاگنے کھانے کی دعائیں)",
-              "کلمے (چھ کلمے ترتیل اور ترجمہ کے ساتھ)",
-              "وضو اور نماز (نماز کی عملی مشق)",
-              "اسلامی آداب اخلاقیات اور اخلاقِ حسنہ",
-              "بچوں کے لیے سیرت نبویؐ اور انبیاء کے سچے قصے",
-              "1-on-1 شفیق اور مہربان معلمین",
-              "دلچسپ کوئز اور اسلامی کھیل"
-            ],
-            roman: [
-              "Duas (Essential daily supplications)",
-              "Kalmas (6 Kalimas with Translation)",
-              "Salah (Perfect step-by-step Wudu & Prayer)",
-              "Islamic Manners (Greetings, respect & habits)",
-              "Seerah for Kids (Interacting histories & stories)",
-              "1-on-1 Highly patient friendly scholars",
-              "Interactive monthly quizzes"
-            ]
-          }
-        }
-      ]
-    },
-    custom: {
-      title: {
-        en: "Custom Packages & Family Discounts",
-        ur: "خصوصی ڈسکاؤنٹ اور کسٹم پیکجز",
-        roman: "Custom Packages & Family Discounts"
-      },
-      subtitle: {
-        en: "We offer amazing sibling benefits to support households with multiple children.",
-        ur: "ایک سے زائد بچوں والی فیملیز کے لیے ہمارا اکیڈمی کا خصوصی فیملی رعایتی نظام۔",
-        roman: "Multiple kids k liye amazing sibling bundles available hain."
-      },
-      icon: Sparkles,
-      plans: [
-        {
-          id: "custom-sibling",
-          daysPerWeek: 0,
-          priceUSD: 0,
-          isCustom: true,
-          badge: { en: "Best Sibling Package", ur: "خصوصی خاندانی پیکیج", roman: "Best Sibling Discount" },
-          isPopularPlan: true,
-          features: {
-            en: [
-              "Family Discount Available for everyone",
-              "Multiple Siblings Discount (Up to 15% off!)",
-              "Customized One-to-One Plans",
-              "Choose your own classes days and duration",
-              "Get a completely free coordinator consultation",
-              "Contact on WhatsApp for Custom Pricing"
-            ],
-            ur: [
-              "تمام طلباء کے لیے فیملی ڈسکاؤنٹ دستیاب ہے",
-              "بہن بھائیوں کے لیے خصوصی رعایت (15 فیصد تک فیس معاف)",
-              "مرضی کے مطابق ون آن ون شیڈول",
-              "کلاس کے دن اور وقت کا مکمل اپنی مرضی کا اختیار",
-              "کوارڈینیٹر سے بالکل مفت رہنمائی کریں",
-              "خصوصی معقول فیس پیکج کسٹمائز کروانے کے لیے واٹس ایپ پر آئیں"
-            ],
-            roman: [
-              "Family Discount Available for families",
-              "Multiple Siblings Discount (Up to 15% off!)",
-              "Customized One-to-One Plans",
-              "Choose your own classes days and duration",
-              "Direct coordinator consultation completely free",
-              "Contact on WhatsApp for Custom Pricing"
-            ]
-          }
-        }
-      ]
+  const countries = [
+    { code: "USD" as const, symbol: "$", name: "United States (USD - $)" },
+    { code: "GBP" as const, symbol: "£", name: "United Kingdom (GBP - £)" },
+    { code: "EUR" as const, symbol: "€", name: "Europe (EUR - €)" },
+    { code: "CAD" as const, symbol: "C$", name: "Canada (CAD - C$)" },
+    { code: "AUD" as const, symbol: "A$", name: "Australia (AUD - A$)" },
+    { code: "AED" as const, symbol: "AED ", name: "United Arab Emirates (AED - د.إ)" },
+    { code: "SAR" as const, symbol: "SAR ", name: "Saudi Arabia (SAR - ر.س)" }
+  ];
+
+  const getCurrencySymbol = (curr: CurrencyCode = currency) => {
+    switch (curr) {
+      case "GBP": return "£";
+      case "EUR": return "€";
+      case "CAD": return "C$";
+      case "AUD": return "A$";
+      case "AED": return "AED ";
+      case "SAR": return "SAR ";
+      default: return "$";
     }
   };
 
-  const getWhatsappLinkForPlan = (courseTitle: string, planTitle: string, price: number, isCustom?: boolean) => {
-    let whatsappNum = activeWhatsapp.replace(/\D/g, "");
-    if (!whatsappNum) whatsappNum = "923345750157";
-    
-    const pText = isCustom ? "custom fee quote" : `$${price}/month plan`;
-    const textMsg = encodeURIComponent(
-      `Assalamoalaikum Worldwide Quran Academy, I am visiting your website and I would like to book a free 3-Day trial class for:\n- Course: "${courseTitle}"\n- Plan: "${planTitle}" (${pText})\n\nPlease guide me about available schedules.`
-    );
-    return `https://wa.me/${whatsappNum}?text=${textMsg}`;
-  };
+  const getPrice = (plan: PricingPlan, curr: CurrencyCode = currency) => {
+    let basePrice = 0;
+    if (curr === "GBP") basePrice = plan.priceGBP;
+    else if (curr === "EUR") basePrice = plan.priceEUR;
+    else if (curr === "CAD") basePrice = plan.priceCAD;
+    else if (curr === "AUD") basePrice = plan.priceAUD;
+    else if (curr === "AED") basePrice = plan.priceAED;
+    else if (curr === "SAR") basePrice = plan.priceSAR;
+    else basePrice = plan.priceUSD;
 
-  const handleSelectPlanAction = (days: number) => {
-    const elem = document.getElementById("trial-booking-section");
-    if (elem) {
-      elem.scrollIntoView({ behavior: "smooth" });
+    if (billingCycle === "quarterly") {
+      // 10% Discount for quarterly prepay
+      return Math.round(basePrice * 0.9);
     }
-    // Triggers the selected days in App.tsx
-    onSelectPlan(days);
+    return basePrice;
   };
 
-  const getActiveTabHeader = () => {
-    const act = coursesPricingData[activeTab];
-    if (!act) return { title: "", subtitle: "", isPopular: false };
-    return {
-      title: act.title[lang],
-      subtitle: act.subtitle[lang],
-      isPopular: act.isPopular
-    };
-  };
-
-  const currentHeader = getActiveTabHeader();
-
-  const headings = {
-    premiumTitle: {
-      en: "Select Your Premium Plan",
-      ur: "اپنا بہترین پیکیج منتخب کریں",
-      roman: "Apna Premium Plan Select Krein"
-    },
-    premiumDesc: {
-      en: "Transparent, simple, and affordable monthly plans with no hidden charges. All packages include a 3-Day free trial to experience the quality.",
-      ur: "بغیر کسی پوشیدہ چارجز کے انتہائی مناسب فیس شیڈول۔ تمام پیکجز میں مستقل کلاس شروع کرنے سے قبل 3 دن کی مفت لائیو ٹرائل کلاس شامل ہے۔",
-      roman: "Bina kisi hidden charges k behtareen monthly plans. Har package me experience k liye 3-Day free trial classes shamil hain."
-    },
-    popularBadgeText: {
-      en: "MOST POPULAR",
-      ur: "طالب علموں کا ترجیح",
-      roman: "MOST POPULAR"
-    },
-    trialBtnText: {
-      en: "Book 3-Day Free Trial",
-      ur: "3 دن کا مفت ٹرائل رجسٹریشن",
-      roman: "Book 3-Day Free Trial"
-    },
-    whatsappText: {
-      en: "Contact on WhatsApp",
-      ur: "واٹس ایپ پر رابطہ",
-      roman: "Contact on WhatsApp"
-    },
-    guaranteeText: {
-      en: "★ All students receive one-to-one live classes and monthly progress reports.",
-      ur: "★ تمام طلباء کو 1-on-1 براہِ راست انفرادی کلاسز دی جاتی ہیں اور ماہانہ کارکردگی کارڈز والدین کو ارسال کئے جاتے ہیں۔",
-      roman: "★ All students receive one-to-one live classes and monthly progress reports."
-    },
-    billingText: {
-      en: "month",
-      ur: "ماہانہ",
-      roman: "month"
-    },
-    weekendBadge: {
-      en: "WEEKEND ONLY",
-      ur: "صرف ہفتہ وار",
-      roman: "WEEKEND ONLY"
-    },
-    customPriceText: {
-      en: "Custom Plan",
-      ur: "مرضی کا پیکیج",
-      roman: "Custom Pricing"
-    }
-  };
-
-  const activeCourseData = coursesPricingData[activeTab];
+  // Find matching plan for the calculator
+  const selectedPlanForCalc = plans.find(p => p.daysPerWeek === calcDaysPerWeek) || plans[0];
+  const calculatedPrice = getPrice(selectedPlanForCalc);
+  const calculatedSymbol = getCurrencySymbol();
+  const classesCount = selectedPlanForCalc.classesPerMonth;
+  const pricePerClass = (calculatedPrice / classesCount).toFixed(2);
 
   return (
-    <section 
-      id="pricing-section" 
-      className="py-20 bg-white border-b border-slate-100 scroll-mt-20 relative"
-    >
-      {/* Light subtle golden/emerald background highlights */}
-      <div className="absolute top-1/4 left-0 w-2/3 h-96 bg-gradient-to-r from-emerald-500/[0.015] to-transparent pointer-events-none rounded-r-3xl" />
-      <div className="absolute bottom-10 right-0 w-1/3 h-96 bg-gradient-to-l from-amber-400/[0.015] to-transparent pointer-events-none rounded-l-3xl" />
+    <div className="py-6 space-y-16" id="pricing-section-container">
+      
+      {/* 1-on-1 vs Group Class Switcher Tabs */}
+      <div className="flex flex-col items-center space-y-4" id="class-mode-selector-wrapper">
+        <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+          Step 1: Choose Learning Mode
+        </span>
+        <div className="bg-emerald-950/5 p-1.5 rounded-2xl border border-emerald-950/10 inline-flex shadow-inner">
+          <button
+            id="mode-toggle-1on1"
+            onClick={() => setClassMode("1on1")}
+            className={`px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer ${
+              classMode === "1on1"
+                ? "bg-emerald-900 text-white shadow-md scale-102"
+                : "text-emerald-950/70 hover:text-emerald-900"
+            }`}
+          >
+            <User className="w-4 h-4" />
+            1-on-1 Live Private Classes
+          </button>
+          <button
+            id="mode-toggle-group"
+            onClick={() => setClassMode("group")}
+            className={`px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer ${
+              classMode === "group"
+                ? "bg-emerald-900 text-white shadow-md scale-102"
+                : "text-emerald-950/70 hover:text-emerald-900"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Group Classes (Budget-Friendly)
+          </button>
+        </div>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Section Heading with Brand Emerald and Gold accoutrements */}
-        <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-850 text-xs px-4 py-1.5 rounded-full font-bold uppercase tracking-wider border border-emerald-250 shadow-3xs mb-3">
-            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400 animate-pulse" />
-            <span>{lang === "en" ? "Affordable & Fair Packages" : lang === "ur" ? "مناسب فیس پیکجز" : "Fair Fees Packages"}</span>
-          </span>
-          <h2 className="text-3xl md:text-4.5xl font-serif font-extrabold text-slate-900 tracking-tight">
-            {headings.premiumTitle[lang]}
-          </h2>
-          <p className="mt-4 text-slate-600 text-sm md:text-base max-w-3xl mx-auto leading-relaxed">
-            {headings.premiumDesc[lang]}
-          </p>
+      {/* LIVE INTERACTIVE FEE CALCULATOR */}
+      <section className="max-w-4xl mx-auto" id="live-calculator-widget">
+        <div className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950 text-white rounded-3xl p-6 md:p-8 shadow-xl border border-emerald-800 relative overflow-hidden">
           
-          <div className="flex items-center justify-center gap-3 mt-6">
-            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent to-emerald-600 rounded-full" />
-            <div className="w-4 h-4 rotate-45 border-2 border-emerald-600 bg-white shadow-3xs flex items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-amber-500" />
+          {/* Visual Accents */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-750/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-emerald-800/15 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-800 flex items-center justify-center text-emerald-300">
+              <Calculator className="w-5 h-5" />
             </div>
-            <div className="w-16 h-0.5 bg-gradient-to-l from-transparent to-emerald-650 rounded-full" />
+            <div>
+              <h3 className="text-xl font-extrabold tracking-tight">Worldwide Tuition Fee Calculator</h3>
+              <p className="text-xs text-emerald-200/70 font-sans">Customize your plan, choose currency, and view final tuition in real-time</p>
+            </div>
           </div>
-        </div>
 
-        {/* 1. SEAMLESS DYNAMIC TAB SWITCHER */}
-        <div id="course-pricing-selector-tabs" className="mb-12">
-          <div className="flex justify-center flex-wrap gap-2.5 max-w-5xl mx-auto p-2.5 bg-slate-50/80 border border-slate-200/80 rounded-2xl md:rounded-3xl shadow-3xs">
-            {Object.entries(coursesPricingData).map(([key, course]) => {
-              const IconComp = course.icon;
-              const isActive = activeTab === key;
-              const isQaida = key === "qaida";
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Left Inputs Column */}
+            <div className="lg:col-span-7 space-y-6 flex flex-col justify-between" id="calc-inputs">
               
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  id={`tab-pricing-${key}`}
-                  onClick={() => setActiveTab(key)}
-                  className={`relative flex items-center gap-2 px-4.5 py-3 rounded-xl md:rounded-2xl text-xs font-bold transition-all duration-300 transform select-none cursor-pointer ${
-                    isActive 
-                      ? "bg-emerald-700 text-white shadow-md border border-emerald-650 scale-102" 
-                      : "bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 border border-slate-200/80 shadow-3xs"
-                  }`}
+              {/* Currency Dropdown selector */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-emerald-200 uppercase tracking-wider">
+                  Select Your Country / Currency
+                </label>
+                <select
+                  id="calc-currency-select"
+                  value={currency}
+                  onChange={(e) => onCurrencyChange && onCurrencyChange(e.target.value as CurrencyCode)}
+                  className="w-full bg-emerald-950/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all cursor-pointer font-sans"
                 >
-                  <IconComp className={`w-4 h-4 ${isActive ? "text-amber-300" : "text-emerald-700"}`} />
-                  <span>{course.title[lang].split("&")[0].split("(")[0]}</span>
-                  
-                  {/* Highlighting Noorani Qaida & Nazra as popular internally */}
-                  {isQaida && (
-                    <span className={`absolute -top-2.5 -right-1 flex items-center gap-0.5 px-2 py-0.5 text-[8px] font-extrabold uppercase rounded-full shadow-3xs border transition-all ${
-                      isActive 
-                        ? "bg-amber-400 text-emerald-950 border-amber-300 animate-bounce" 
-                        : "bg-emerald-50 text-emerald-900 border-emerald-100"
-                    }`}>
-                      <Crown className="w-2 h-2 text-amber-600 fill-amber-500" />
-                      {headings.popularBadgeText[lang].split(" ")[0]}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                  {countries.map((item) => (
+                    <option key={item.code} value={item.code} className="bg-emerald-950 text-white">
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        {/* Selected Course Header Indicator */}
-        <div className="text-center max-w-2xl mx-auto mb-10 pb-6 border-b border-slate-100">
-          <div className="flex items-center justify-center gap-1.5 text-amber-600 mb-1">
-            {currentHeader.isPopular && (
-              <span className="flex items-center gap-1 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest text-amber-850">
-                <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                <span>★ {headings.popularBadgeText[lang]} ★</span>
-              </span>
-            )}
-          </div>
-          <h3 className="text-xl md:text-2xl font-serif font-bold text-slate-850">
-            {activeCourseData.title[lang]}
-          </h3>
-          <p className="text-xs md:text-sm text-slate-550 mt-1.5 font-sans leading-relaxed">
-            {activeCourseData.subtitle[lang]}
-          </p>
-        </div>
-
-        {/* 2. DURATION & PLANS CARDS GRID */}
-        <div 
-          className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(activeCourseData.plans.length, 4)} gap-8 max-w-6xl mx-auto justify-center items-stretch`}
-        >
-          {activeCourseData.plans.map((p) => {
-            const hasPopularEffect = p.isPopularPlan;
-            const weekText = lang === "en" 
-              ? `${p.daysPerWeek} Classes per week` 
-              : lang === "ur" 
-                ? `ہفتے میں ${p.daysPerWeek} دن` 
-                : `${p.daysPerWeek} Din / Haftey`;
-
-            const cardFeatures = lang === "en" ? p.features.en : lang === "ur" ? p.features.ur : p.features.roman;
-
-            return (
-              <div
-                key={p.id}
-                id={`premium-price-card-${p.id}`}
-                className={`flex flex-col justify-between bg-white rounded-2.5xl p-6.5 md:p-8 transition-all duration-300 relative border transform hover:scale-[1.02] ${
-                  hasPopularEffect 
-                    ? "border-2 border-emerald-600 shadow-xl shadow-emerald-50 pointer-events-auto" 
-                    : "border-slate-200 shadow-md hover:border-emerald-600/30 hover:shadow-xl"
-                }`}
-              >
-                {/* Popular Overlay Label */}
-                {hasPopularEffect && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-amber-500 text-emerald-950 text-[9px] font-extrabold px-3.5 py-1.5 tracking-wider uppercase rounded-full shadow-sm border border-amber-300 flex items-center gap-1 select-none">
-                    <Sparkles className="w-3 h-3 text-emerald-950 fill-emerald-950" />
-                    <span>{headings.popularBadgeText[lang]}</span>
+              {/* Days per week selection */}
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-emerald-200 uppercase tracking-wider flex items-center justify-between">
+                  <span>How many Classes per Week?</span>
+                  <span className="text-[10px] lowercase text-emerald-350 italic">
+                    {selectedPlanForCalc.classesPerMonth} total classes / month
                   </span>
-                )}
+                </label>
+                
+                <div className="grid grid-cols-4 gap-2" id="calc-frequency-grid">
+                  {[2, 3, 4, 5].map((days) => {
+                    // Disable 4 days in group mode
+                    const isGroupMode = classMode === "group";
+                    const isUnsupported = isGroupMode && days === 4;
 
-                {/* Weekend Tag overlay */}
-                {p.isWeekend && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-50 text-emerald-800 text-[9px] font-extrabold px-3.5 py-1.5 tracking-wider uppercase rounded-full shadow-sm border border-emerald-150 flex items-center gap-1 select-none">
-                    <Calendar className="w-3 h-3 text-emerald-700" />
-                    <span>{headings.weekendBadge[lang]}</span>
-                  </span>
-                )}
-
-                <div className="space-y-6">
-                  
-                  {/* Top Header Card */}
-                  <div className="text-center pb-5 border-b border-slate-100">
-                    <span className="px-3.5 py-1 bg-slate-50 border border-slate-200/60 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                      {p.badge[lang]}
-                    </span>
-                    
-                    <h4 className="text-base font-bold text-slate-800 mt-3 font-serif uppercase tracking-tight">
-                      {p.isCustom ? "Custom Sibling Package" : weekText}
-                    </h4>
-
-                    {/* Classes description */}
-                    {!p.isCustom && (
-                      <p className="text-[11px] text-zinc-400 font-sans tracking-wide mt-1">
-                        {p.classesPerMonth} {lang === "en" ? "Classes / month" : lang === "ur" ? "کلاسز ماہانہ" : "Classes / month"} • 1-on-1 Live
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Monthly Pricing Badge */}
-                  <div className="text-center py-2">
-                    {p.isCustom ? (
-                      <div className="space-y-1">
-                        <span className="text-3xl font-serif font-extrabold text-emerald-800 tracking-tight">
-                          {headings.customPriceText[lang]}
-                        </span>
-                        <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider">
-                          Family Bundles
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-baseline justify-center gap-1">
-                        <span className="text-2xl font-bold font-mono text-emerald-700 align-super">$</span>
-                        <span className="text-4.5xl sm:text-5.5xl font-serif font-bold tracking-tight text-slate-900 leading-none">
-                          {p.priceUSD}
-                        </span>
-                        <span className="text-xs text-slate-500 font-semibold lowercase tracking-wide">
-                          /{headings.billingText[lang]}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Course Features Bullets list */}
-                  <div className="space-y-3 pt-2">
-                    <ul className="space-y-2.5">
-                      {cardFeatures.map((feat, fidx) => (
-                        <li key={fidx} className="flex items-start gap-2.5 text-xs">
-                          <div className="p-0.5 bg-emerald-50 text-emerald-700 rounded-full shrink-0 border border-emerald-100 mt-0.5">
-                            <Check className="w-3.5 h-3.5 text-emerald-800" />
-                          </div>
-                          <span className="text-slate-650 leading-tight">
-                            {feat}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
+                    return (
+                      <button
+                        key={days}
+                        type="button"
+                        id={`calc-days-${days}`}
+                        disabled={isUnsupported}
+                        onClick={() => setCalcDaysPerWeek(days)}
+                        className={`py-3.5 rounded-xl font-extrabold text-sm transition-all flex flex-col items-center justify-center relative cursor-pointer ${
+                          isUnsupported
+                            ? "opacity-30 bg-emerald-950/20 text-white/40 cursor-not-allowed"
+                            : calcDaysPerWeek === days
+                            ? "bg-emerald-450 bg-emerald-500 text-white shadow-lg scale-102 border border-emerald-300/20"
+                            : "bg-emerald-950/30 border border-white/5 hover:border-white/10 text-emerald-100"
+                        }`}
+                      >
+                        <span className="text-lg">{days}</span>
+                        <span className="text-[9px] uppercase tracking-wider opacity-80">Days</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Card Direct CTA Buttons (Book trial + WhatsApp support) */}
-                <div className="pt-8 space-y-3">
-                  
-                  {/* Book Trial Primary Action */}
-                  <button
-                    type="button"
-                    onClick={() => handleSelectPlanAction(p.daysPerWeek)}
-                    className="w-full py-3.5 px-4 rounded-xl text-xs font-extrabold tracking-wider transition-all duration-250 cursor-pointer text-center text-white bg-emerald-700 hover:bg-emerald-800 hover:translate-y-[-1px] shadow-sm flex items-center justify-center gap-2 uppercase"
-                  >
-                    <span>{headings.trialBtnText[lang]}</span>
-                    <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-                  </button>
+                {classMode === "group" && (
+                  <p className="text-[10px] text-emerald-300 flex items-center gap-1.5 font-sans">
+                    <Info className="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" />
+                    Group classes run on 2, 3, or 5 days frequencies for optimized collaborative peers dynamic.
+                  </p>
+                )}
+              </div>
 
-                  {/* Send Direct WhatsApp Action with prefilled Plan Details */}
-                  <a
-                    href={getWhatsappLinkForPlan(
-                      activeCourseData.title[lang], 
-                      p.isCustom ? p.badge[lang] : weekText, 
-                      p.priceUSD,
-                      p.isCustom
-                    )}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full py-3 px-4 rounded-xl text-xs font-bold transition-all duration-250 cursor-pointer text-center text-emerald-800 bg-white border border-emerald-200 hover:bg-emerald-50 flex items-center justify-center gap-2 shadow-3xs"
-                  >
-                    <MessageCircle className="w-4 h-4 text-emerald-650 fill-emerald-100 shrink-0" />
-                    <span>{headings.whatsappText[lang]}</span>
-                  </a>
+              {/* Quick Perks Indicator */}
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-2.5 text-xs text-emerald-200/95 font-sans">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Free 3-Day Trial lessons included</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Pragmatic custom Tajweed curriculum</span>
+                </div>
+              </div>
 
-                  {/* Required Premium Guarantee / Footnote on every card */}
-                  <div className="pt-4 border-t border-slate-50 flex items-center justify-center text-center">
-                    <p className="text-[10px] text-emerald-800 font-serif leading-tight max-w-xs hover:text-emerald-950 transition-colors">
-                      {headings.guaranteeText[lang]}
-                    </p>
+            </div>
+
+            {/* Right Output Column (The visual calculated receipt) */}
+            <div className="lg:col-span-5" id="calc-receipt-column">
+              <div className="bg-white text-emerald-950 rounded-2xl p-6 border border-emerald-150 h-full flex flex-col justify-between shadow-lg relative">
+                
+                {selectedPlanForCalc.recommended && (
+                  <span className="absolute -top-3 right-4 bg-amber-500 text-white text-[9px] font-extrabold uppercase py-1 px-3 rounded-full shadow tracking-wider flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-white" />
+                    Best Value
+                  </span>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest block mb-0.5">
+                      Your Customized Plan
+                    </span>
+                    <h4 className="text-lg font-extrabold text-emerald-950 leading-tight">
+                      {selectedPlanForCalc.name}
+                    </h4>
                   </div>
 
+                  <div className="border-t border-b border-emerald-950/10 py-3.5 space-y-2.5 text-xs">
+                    <div className="flex justify-between items-center text-emerald-950/60 font-sans">
+                      <span>Monthly Sessions:</span>
+                      <span className="font-semibold text-emerald-950">{classesCount} Classes / month</span>
+                    </div>
+                    <div className="flex justify-between items-center text-emerald-950/60 font-sans">
+                      <span>Class Duration:</span>
+                      <span className="font-semibold text-emerald-950">{selectedPlanForCalc.durationPerClass} / session</span>
+                    </div>
+                    <div className="flex justify-between items-center text-emerald-950/60 font-sans">
+                      <span>Class Structure:</span>
+                      <span className="font-semibold text-emerald-850">
+                        {classMode === "1on1" ? "1-on-1 Premium Private" : "Small Group (3-5 peers)"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Pricing Result Block */}
+                  <div className="text-center py-2">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-xl font-bold text-emerald-950/60 self-start mt-2">{calculatedSymbol}</span>
+                      <span className="text-5xl font-black text-emerald-950 tracking-tight">{calculatedPrice}</span>
+                      <span className="text-sm text-emerald-950/50 self-end mb-1">/mo</span>
+                    </div>
+                    <p className="text-[11px] text-emerald-700/80 font-bold mt-1.5 font-sans">
+                      ≈ {calculatedSymbol}{pricePerClass} per active class
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-4">
+                  {/* Local mini Billing Toggle */}
+                  <div className="flex justify-center items-center gap-2 bg-emerald-50 rounded-xl p-1.5 border border-emerald-950/5">
+                    <button
+                      id="calc-billing-monthly"
+                      type="button"
+                      onClick={() => setBillingCycle("monthly")}
+                      className={`flex-1 text-[10px] py-1.5 font-extrabold rounded-lg transition-all cursor-pointer ${
+                        billingCycle === "monthly" ? "bg-white text-emerald-950 shadow-sm" : "text-emerald-950/50"
+                      }`}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      id="calc-billing-quarterly"
+                      type="button"
+                      onClick={() => setBillingCycle("quarterly")}
+                      className={`flex-1 text-[10px] py-1.5 font-extrabold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                        billingCycle === "quarterly" ? "bg-emerald-900 text-white shadow-sm" : "text-emerald-950/50"
+                      }`}
+                    >
+                      Quarterly <span className="bg-amber-400 text-[#1a2e22] px-1 py-0.2 rounded text-[8px] font-black scale-95">-10%</span>
+                    </button>
+                  </div>
+
+                  {/* Selection Button */}
+                  <button
+                    id="calc-cta-submit"
+                    type="button"
+                    onClick={() => onSelectPlan(selectedPlanForCalc.name)}
+                    className="w-full py-3.5 bg-emerald-900 hover:bg-emerald-950 text-[#fcfbf7] font-black rounded-xl text-xs tracking-wider uppercase transition-all shadow-md active:scale-97 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Zap className="w-4 h-4 fill-[#fcfbf7]" />
+                    Book 3-Day Free Trial
+                  </button>
                 </div>
 
               </div>
-            );
-          })}
-        </div>
-        
-        {/* Absolute Footer Note under overall layout */}
-        <div className="mt-14 p-5 max-w-4xl mx-auto rounded-xl bg-slate-50 border border-slate-200/70 text-center flex flex-col sm:flex-row items-center justify-center gap-3 shadow-3xs">
-          <div className="p-2 bg-emerald-100 text-emerald-800 rounded-full hidden sm:block border border-emerald-150 shrink-0">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <p className="text-xs text-slate-650 leading-relaxed font-sans">
-            <strong className="font-bold text-slate-850">Academic Guarantee:</strong> Worldwide Quran Academy is completely dedicated to providing transparent online interfaces. Sibling pricing discounts apply automatically to families up to 15%. Direct coordinate matching is offered on Skype & Zoom around US, UK, Australia & Canada time zones.
-          </p>
-        </div>
+            </div>
 
+          </div>
+
+        </div>
+      </section>
+
+      {/* Grid of plans cards title */}
+      <div className="text-center space-y-2 pt-4" id="standard-plans-heading-wrapper">
+        <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest block">
+          Step 2: Browse Complete Packages
+        </span>
+        <h4 className="text-xl font-bold text-emerald-950">
+          All Available {classMode === "1on1" ? "1-on-1 Premium Private" : "Small Group Budget-Friendly"} Plans
+        </h4>
+        <p className="text-xs text-emerald-950/50 max-w-lg mx-auto font-sans">
+          Select or compare our structured options below. You can always change or switch packages at any point during your studies.
+        </p>
+
+        {/* Billing Cycle Toggle */}
+        <div className="flex justify-center items-center gap-4 pt-6" id="billing-cycle-toggle-wrapper">
+          <span className={`text-xs font-bold transition-colors ${billingCycle === "monthly" ? "text-emerald-950" : "text-emerald-950/50"}`}>
+            Monthly Cycle
+          </span>
+          <button
+            id="billing-cycle-toggle-trigger"
+            onClick={() => setBillingCycle(billingCycle === "monthly" ? "quarterly" : "monthly")}
+            className="relative w-12 h-7 bg-emerald-900 rounded-full p-1 transition-all outline-none"
+          >
+            <motion.div
+              layout
+              className="w-5 h-5 bg-[#fcfbf7] rounded-full shadow-md"
+              animate={{ x: billingCycle === "monthly" ? 0 : 20 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+          <span className={`text-xs font-bold transition-colors flex items-center gap-1.5 ${billingCycle === "quarterly" ? "text-emerald-950" : "text-emerald-950/50"}`}>
+            Quarterly Prepay
+            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-black uppercase rounded-full">
+              Save 10%
+            </span>
+          </span>
+        </div>
       </div>
-    </section>
+
+      {/* Grid of plans */}
+      <div 
+        className={`grid grid-cols-1 md:grid-cols-2 ${
+          plans.length === 3 ? "lg:grid-cols-3 max-w-5xl" : "lg:grid-cols-4 max-w-7xl"
+        } gap-8 mx-auto`} 
+        id="pricing-plans-grid"
+      >
+        {plans.map((plan, index) => {
+          const price = getPrice(plan);
+          const symbol = getCurrencySymbol();
+
+          return (
+            <motion.div
+              key={plan.id}
+              id={`plan-card-${plan.id}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1, duration: 0.4 }}
+              className={`relative bg-white rounded-2xl border transition-all flex flex-col h-full ${
+                plan.recommended
+                  ? "border-emerald-800 shadow-xl ring-2 ring-emerald-800/10 scale-102 z-10"
+                  : "border-emerald-950/10 shadow-md hover:border-emerald-900/30"
+              }`}
+            >
+              {plan.recommended && (
+                <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-emerald-800 text-white text-[10px] font-bold tracking-widest uppercase py-1 px-4 rounded-full shadow flex items-center gap-1">
+                  <Star className="w-3 h-3 fill-white" />
+                  Most Popular
+                </div>
+              )}
+
+              {/* Header */}
+              <div className="p-6 pb-0 border-b border-emerald-950/5 text-center flex-shrink-0">
+                <h4 className="text-sm font-bold uppercase tracking-widest text-emerald-950/50 mb-1">{plan.name}</h4>
+                <div className="flex items-center justify-center gap-1 my-3">
+                  <span className="text-2xl font-bold text-emerald-950/70 self-start mt-1">{symbol}</span>
+                  <span className="text-5xl font-extrabold tracking-tight text-emerald-950">{price}</span>
+                  <span className="text-sm text-emerald-950/50 self-end mb-1">/mo</span>
+                </div>
+                <p className="text-xs text-emerald-800 font-semibold mb-4 bg-emerald-50 rounded-full py-1 inline-block px-4">
+                  {plan.daysPerWeek} Classes per week ({plan.classesPerMonth} total)
+                </p>
+              </div>
+
+              {/* Features list */}
+              <div className="p-6 flex-grow">
+                <ul className="space-y-3">
+                  {plan.features.map((feature, fIdx) => (
+                    <li key={fIdx} className="flex items-start gap-2.5 text-sm text-emerald-950/80">
+                      <Check className="w-4 h-4 text-emerald-700 mt-0.5 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* CTA button */}
+              <div className="p-6 pt-0 mt-auto flex-shrink-0">
+                <button
+                  id={`select-plan-${plan.id}`}
+                  onClick={() => onSelectPlan(plan.name)}
+                  className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-97 ${
+                    plan.recommended
+                      ? "bg-emerald-900 text-white hover:bg-emerald-950 shadow-md shadow-emerald-950/10"
+                      : "bg-emerald-50 hover:bg-emerald-100/80 text-emerald-950 border border-emerald-950/10"
+                  }`}
+                >
+                  <Zap className={`w-4 h-4 ${plan.recommended ? "fill-white" : ""}`} />
+                  Select & Book Trial
+                </button>
+                <p className="text-[10px] text-center text-emerald-950/40 mt-3 font-sans">
+                  * 3-Day trial is free. No auto-charge.
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

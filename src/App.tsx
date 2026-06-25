@@ -1,256 +1,143 @@
-import { useState, useEffect } from "react";
-import { 
-  initialAcademyConfig, 
-  initialCourses, 
-  initialPricingPlans 
-} from "./data";
-import { AcademyConfig, Course, PricingPlan, LanguageMode } from "./types";
+import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomePage from "./components/HomePage";
+import AboutPage from "./components/AboutPage";
+import ContactPage from "./components/ContactPage";
 import CoursesPage from "./components/CoursesPage";
 import PricesPage from "./components/PricesPage";
-import AboutPage from "./components/AboutPage";
 import BlogPage from "./components/BlogPage";
-import ContactPage from "./components/ContactPage";
 import AdminPage from "./components/AdminPage";
-import CustomizerSettings from "./components/CustomizerSettings";
-import { motion, AnimatePresence } from "motion/react";
+import TrialBookingForm from "./components/TrialBookingForm";
+import { CurrencyCode } from "./types";
 
 export default function App() {
-  // Multilingual State: en | ur | roman
-  const [lang, setLang] = useState<LanguageMode>("en");
+  const [currentPage, setCurrentPage] = useState<string>("home");
+  const [currency, setCurrency] = useState<CurrencyCode>("USD");
+  const [language, setLanguage] = useState<string>("en");
+  const [showTrialModal, setShowTrialModal] = useState<boolean>(false);
+  const [classMode, setClassMode] = useState<"1on1" | "group">("1on1");
 
-  // State-based Page Routing: home | courses | prices | about | blog | contact
-  const [activePage, setActivePage] = useState<string>("home");
-
-  // Load configuration with fallback to initial data
-  const [config, setConfig] = useState<AcademyConfig>(initialAcademyConfig);
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
-  const [plans, setPlans] = useState<PricingPlan[]>(initialPricingPlans);
-
-  // Administrative dialog toggle state
-  const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
-  const [bookingTrigger, setBookingTrigger] = useState<number>(0);
-
-  // Load customizer state from localStorage on mount
+  // Scroll to top on page change
   useEffect(() => {
-    const savedConfig = localStorage.getItem("quran_academy_config");
-    if (savedConfig) {
-      try {
-        const parsed = JSON.parse(savedConfig);
-        let migrated = false;
-        
-        // Cleanse and migrate any old template mock numbers/phones and old emails
-        if (!parsed.whatsapp || parsed.whatsapp.includes("3001234567") || parsed.whatsapp === "+923001234567" || parsed.whatsapp === "923001234567") {
-          parsed.whatsapp = "+923345750157";
-          migrated = true;
-        }
-        if (!parsed.phone || parsed.phone.includes("300 1234567") || parsed.phone === "+92 300 1234567" || parsed.phone === "923001234567") {
-          parsed.phone = "+92 334 5750157";
-          migrated = true;
-        }
-        if (!parsed.email || parsed.email !== "ahmadume613@gmail.com") {
-          parsed.email = "ahmadume613@gmail.com";
-          migrated = true;
-        }
-        
-        setConfig(parsed);
-        
-        if (migrated) {
-          localStorage.setItem("quran_academy_config", JSON.stringify(parsed));
-        }
-      } catch (e) {
-        console.error("Failed to parse saved config", e);
-      }
-    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
-    const savedCourses = localStorage.getItem("quran_academy_courses");
-    if (savedCourses) {
-      try {
-        setCourses(JSON.parse(savedCourses));
-      } catch (e) {
-        console.error("Failed to parse saved courses", e);
-      }
-    }
-
-    const savedPlans = localStorage.getItem("quran_academy_plans");
-    if (savedPlans) {
-      try {
-        setPlans(JSON.parse(savedPlans));
-      } catch (e) {
-        console.error("Failed to parse saved plans", e);
-      }
+  // Load customizer/saved states if any
+  useEffect(() => {
+    const savedPage = localStorage.getItem("last_active_page");
+    if (savedPage) {
+      setCurrentPage(savedPage);
     }
   }, []);
 
-  // Deep-linking hash routing and section smooth scrolling
-  useEffect(() => {
-    const handleRoute = () => {
-      const hash = window.location.hash.replace("#", "").replace("/", "");
-      const path = window.location.pathname.replace("/", "");
-      
-      const targetRoute = path || hash || "home";
-      
-      if (targetRoute === "admin") {
-        setActivePage("admin");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else if (targetRoute === "blog" || targetRoute === "articles") {
-        setActivePage("blog");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
-        const validSections = ["home", "courses", "prices", "about", "contact"];
-        const matchedSection = validSections.includes(targetRoute) ? targetRoute : "home";
-        
-        setActivePage(matchedSection);
-        
-        // Wait for elements to mount, then scroll
-        setTimeout(() => {
-          const sectionId = matchedSection === "prices" ? "prices-section" : matchedSection === "about" ? "about-section" : matchedSection === "contact" ? "contact-section" : matchedSection === "courses" ? "courses-section" : "home-section";
-          const element = document.getElementById(sectionId);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "start" });
-          } else if (matchedSection === "home") {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }
-        }, 200);
-      }
-    };
-
-    handleRoute();
-    window.addEventListener("hashchange", handleRoute);
-    return () => {
-      window.removeEventListener("hashchange", handleRoute);
-    };
-  }, []);
-
-  const handleUpdateConfig = (newConfig: AcademyConfig) => {
-    setConfig(newConfig);
+  const handlePageChange = (page: string) => {
+    setCurrentPage(page);
+    localStorage.setItem("last_active_page", page);
   };
 
-  const handleUpdateCourses = (newCourses: Course[]) => {
-    setCourses(newCourses);
+  const handleSelectPlan = (planName: string) => {
+    // Store selected plan name in storage
+    localStorage.setItem("selected_trial_plan", planName);
+    setShowTrialModal(true);
   };
 
-  const handleUpdatePlans = (newPlans: PricingPlan[]) => {
-    setPlans(newPlans);
-  };
-
-  const handleBookingAdded = () => {
-    setBookingTrigger(prev => prev + 1);
-  };
-
-  const handleSelectCourseFromSyllabus = (courseId: string) => {
-    // When a student selects a course on the Courses page, we navigate to the registration form and highlight that page
-    setActivePage("contact");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleSelectPlanFromPricing = (daysPerWeek: number) => {
-    // Navigate to Contact Page
-    setActivePage("contact");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const renderActivePage = () => {
+    switch (currentPage) {
+      case "home":
+        return <HomePage onPageChange={handlePageChange} onBookTrial={() => setShowTrialModal(true)} language={language} />;
+      case "courses":
+        return <CoursesPage onBookTrial={() => setShowTrialModal(true)} />;
+      case "prices":
+        return <PricesPage currency={currency} onSelectPlan={handleSelectPlan} language={language} initialClassMode={classMode} onClassModeChange={setClassMode} onCurrencyChange={setCurrency} />;
+      case "about":
+        return <AboutPage />;
+      case "contact":
+        return <ContactPage />;
+      case "blog":
+        return <BlogPage />;
+      case "admin":
+        return <AdminPage />;
+      default:
+        return <HomePage onPageChange={handlePageChange} onBookTrial={() => setShowTrialModal(true)} language={language} />;
+    }
   };
 
   return (
-    <div id="landing-page-root" className="min-h-screen bg-white flex flex-col font-sans text-slate-850 overflow-x-hidden">
+    <div className="min-h-screen bg-[#fcfbf7] text-[#1c2e24] flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-950" id="applet-root">
       
-      {/* 1. Universal Navigation Header */}
+      {/* Top Navigation bar */}
       <Navbar
-        lang={lang}
-        onLangChange={setLang}
-        activePage={activePage}
-        onPageChange={setActivePage}
-        config={config}
-        onAdminOpen={() => setIsAdminOpen(true)}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+        classMode={classMode}
+        onClassModeChange={setClassMode}
+        currency={currency}
+        onCurrencyChange={setCurrency}
+        language={language}
+        onLanguageChange={setLanguage}
+        onBookTrial={() => setShowTrialModal(true)}
       />
 
-      {/* 2. Page View Transition Container */}
-      <main className="flex-1 flex flex-col relative">
+      {/* Main viewport with fluid transitions */}
+      <main className="flex-grow" id="main-content-viewport">
         <AnimatePresence mode="wait">
           <motion.div
-            key={activePage}
-            initial={{ opacity: 0, y: 8 }}
+            key={currentPage}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: "easeInOut" }}
-            className="flex-1 flex flex-col"
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            {["home", "courses", "prices", "about", "contact"].includes(activePage) && (
-              <div className="flex flex-col">
-                <div id="home-section">
-                  <HomePage 
-                    lang={lang} 
-                    config={config} 
-                    onNavigate={(page) => { window.location.hash = `#${page}`; }} 
-                  />
-                </div>
-                <div id="courses-section" className="scroll-mt-20">
-                  <CoursesPage 
-                    courses={courses} 
-                    lang={lang} 
-                    onSelectCourse={handleSelectCourseFromSyllabus} 
-                  />
-                </div>
-                <div id="prices-section" className="scroll-mt-20">
-                  <PricesPage 
-                    plans={plans} 
-                    lang={lang} 
-                    onSelectPlan={handleSelectPlanFromPricing} 
-                  />
-                </div>
-                <div id="about-section" className="scroll-mt-20">
-                  <AboutPage 
-                    lang={lang} 
-                    config={config} 
-                  />
-                </div>
-                <div id="contact-section" className="scroll-mt-20">
-                  <ContactPage 
-                    courses={courses} 
-                    lang={lang} 
-                    config={config} 
-                    onBookingSuccess={handleBookingAdded} 
-                  />
-                </div>
-              </div>
-            )}
-            {activePage === "blog" && (
-              <BlogPage 
-                lang={lang} 
-              />
-            )}
-            {activePage === "admin" && (
-              <AdminPage 
-                lang={lang} 
-              />
-            )}
+            {renderActivePage()}
           </motion.div>
         </AnimatePresence>
       </main>
 
-      {/* 3. Universal Dark Footer */}
-      <Footer
-        activePage={activePage}
-        onPageChange={setActivePage}
-        config={config}
-        courses={courses}
-        lang={lang}
-        onAdminOpen={() => setIsAdminOpen(true)}
-      />
+      {/* Footer */}
+      <Footer onPageChange={handlePageChange} language={language} />
 
-      {/* 4. Academy Control Panel / Customizer Settings modal */}
-      <CustomizerSettings
-        currentConfig={config}
-        courses={courses}
-        plans={plans}
-        isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
-        onUpdateConfig={handleUpdateConfig}
-        onUpdateCourses={handleUpdateCourses}
-        onUpdatePlans={handleUpdatePlans}
-        bookingTrigger={bookingTrigger}
-      />
+      {/* Booking Overlay Modal */}
+      <AnimatePresence>
+        {showTrialModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto" id="trial-modal-wrapper">
+            {/* Dark blur backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowTrialModal(false)}
+              className="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm"
+              id="trial-modal-backdrop"
+            />
+
+            {/* Modal Body container */}
+            <div className="flex min-h-full items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: "spring", duration: 0.4 }}
+                className="relative w-full max-w-xl z-10"
+                id="trial-modal-body"
+              >
+                {/* Close Button overlay */}
+                <button
+                  id="trial-modal-close-btn"
+                  onClick={() => setShowTrialModal(false)}
+                  className="absolute right-4 top-4 p-2 rounded-xl text-emerald-950/40 hover:text-emerald-950 hover:bg-emerald-50 transition-colors z-20"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <TrialBookingForm onSuccess={() => setShowTrialModal(false)} language={language} />
+              </motion.div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

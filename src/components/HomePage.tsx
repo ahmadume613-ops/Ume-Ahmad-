@@ -1,488 +1,384 @@
-import { useState } from "react";
-import { LanguageMode, AcademyConfig } from "../types";
-import { initialTestimonials } from "../data";
-import { 
-  Star, Phone, MessageCircle, Shield, Plus, Minus, 
-  ArrowRight, Users, Heart, BookOpen, Clock, Award, Sparkles, HelpCircle
-} from "lucide-react";
+import React, { useState } from "react";
+import { BookOpen, Star, Sparkles, CheckCircle2, ChevronDown, Award, Users, Globe, Video, ArrowRight, ShieldCheck, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import childLearningImg from "../assets/images/quran_learning_hero_1782214664239.jpg";
+import { COURSES, TESTIMONIALS, FAQS } from "../data";
+import SyllabusSection from "./SyllabusSection";
 
 interface HomePageProps {
-  lang: LanguageMode;
-  config: AcademyConfig;
-  onNavigate: (page: string) => void;
+  onPageChange: (page: string) => void;
+  onBookTrial: () => void;
+  language: string;
 }
 
-export default function HomePage({ lang, config, onNavigate }: HomePageProps) {
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+export default function HomePage({ onPageChange, onBookTrial, language }: HomePageProps) {
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
-  // Pre-fill whatsapp message link helper using the requested direct URL
-  const getWhatsappLink = () => {
-    const num = config.whatsapp.replace(/\D/g, "");
-    const textMsg = encodeURIComponent(
-      `Assalamoalaikum, I am visiting Worldwide Quran Academy website and I want to book a free 3-Day trial class for myself/my children. Please guide me about schedules.`
-    );
-    return `https://wa.me/${num || "923345750157"}?text=${textMsg}`;
+  const toggleFaq = (index: number) => {
+    setActiveFaq(activeFaq === index ? null : index);
   };
 
-  const faqs = [
-    {
-      q: {
-        en: "Is the 3-day free trial really free? Do I need a credit card?",
-        ur: "کیا 3 دن کی ٹرائل کلاس واقعی مفت ہے؟ کیا کارڈ کی ضرورت ہے؟",
-        roman: "Kya 3 days trial sach me free hai? Credit card chahiye?"
-      },
-      a: {
-        en: "Yes! The 3-day trial is 100% free. No credit card, deposit, or payment details are requested. You can experience class quality and only continue if you are fully satisfied.",
-        ur: "جی ہاں! 3 دن کا ٹرائل سو فیصد مفت ہے۔ اس کے لیے کسی کارڈ، بینک اکاؤنٹ یا فیس کی ضرورت نہیں ہے۔ کلاس پسند آنے کی صورت میں ہی فیس ادا کریں۔",
-        roman: "Haan ji! 3 Days trial bilkul free hai. Kisi credit card ya billing detail ki zaroorat nahi hai. Agar aap satisfies ho tou tab regular plan choose karain."
-      }
+  // Translations helper
+  const t = {
+    heroTitle: {
+      en: "Learn Holy Quran Online With Tajweed At Home",
+      ar: "تعلم القرآن الكريم عبر الإنترنت بالتجويد في المنزل",
+      ur: "گھر بیٹھے تجوید کے ساتھ قران پاک آن لائن سیکھیں",
+      fr: "Apprendre le Saint Coran en Ligne avec le Tajweed",
+      de: "Lernen Sie den Heiligen Koran Online mit Tajweed"
     },
-    {
-      q: {
-        en: "Are there female teachers available for girls and kids?",
-        ur: "کیا بچیوں اور چھوٹے بچوں کے لیے خواتین اساتذہ موجود ہیں؟",
-        roman: "Kya female teachers available hain bacho aur girls k liye?"
-      },
-      a: {
-        en: "Absolutely. We have highly certified, gentle, and expert female Islamic scholars available 24/7. They are experienced in teaching children and female students in a comfortable environment.",
-        ur: "جی بالکل! ہماری اکیڈمی میں بچیوں اور بچوں کی تعلیم و تربیت کے لیے انتہا درجہ شفیق، باحجاب اور تجربہ کار عالمہ و قاریہ اساتذہ علیحدہ سے دستیاب ہیں۔",
-        roman: "Ji bilkul! Hamare paas female scholars certified special classes k liye parha rhi hain jo bacho aur khawateen ko nihayat sabar se parhati hain."
-      }
-    },
-    {
-      q: {
-        en: "How are the classes conducted? What software is required?",
-        ur: "کلاسز کیسے لی جاتی ہیں؟ اس کے لیے کون سے سافٹ ویئر کی ضرورت ہے؟",
-        roman: "Classes kaise hoti hain? Kuch software download krna parega?"
-      },
-      a: {
-        en: "The classes are conducted 1-on-1 in a live interactive room using Zoom or Skype. All you need is a stable internet connection and a tablet, laptop, or smartphone.",
-        ur: "تمام کلاسز براہِ راست 1-on-1 لائیو ہوتی ہیں جن میں استاد اور طالب علم زوم (Zoom) یا اسکائپ (Skype) پر منسلک ہوتے ہیں۔ آپ کے پاس موبائل یا لیپ ٹاپ ہونا ضروری ہے۔",
-        roman: "Klasser live 1-on-1 Zoom ya Skype ke zariye hoti hain. Aap tablet, phone ya laptop se join kr skte hain. Hamara coordinator settings krwa dega."
-      }
-    },
-    {
-      q: {
-        en: "Can I choose my own timing and shift class days?",
-        ur: "کیا میں کلاس کے دن اور اوقات اپنی مرضی کے مطابق طے کر سکتا ہوں؟",
-        roman: "Kya timing apni marzi ki select kr skte hain?"
-      },
-      a: {
-        en: "Yes! Worldwide Quran Academy operates 24/7. We support all international time zones (US, Canada, UK, Australia, etc.). You can freely select your preferred time slot and days of weekly lessons.",
-        ur: "جی بالکل! ہمارے پاس کلاسز چوبیس گھنٹے دستیاب ہیں۔ آپ اپنے اسکول، کالج یا ملازمت کے اوقات کے مطابق کسی بھی وقت کا انتخاب کر سکتے ہیں۔",
-        roman: "Ji haan! Hamari academy 24 hours open rhti hai. Aap US, UK, Australia k time zones k mutabiq comfortable timing customize karwa sakte hain."
-      }
-    },
-    {
-      q: {
-        en: "What courses do you teach? Can absolute beginners join?",
-        ur: "آپ کون سے کورسز پڑھاتے ہیں؟ کیا بالکل شروع سے سیکھنے والے شامل ہو سکتے ہیں؟",
-        roman: "Aap kon se courses parhate hain? Beginners seekh skte hain?"
-      },
-      a: {
-        en: "We teach from the absolute basic Noorani Qaida for beginners, up to advanced Quran Tajweed Recitation, Hifz (Memorization), Translation, Tafseer, and Daily Masnoon Duas. No prior Arabic knowledge is required.",
-        ur: "جی ہاں! ہمارے پاس بالکل شروع سے سیکھنے والوں کیلئے 'نورانی قاعدہ'، ناظرہ قرآن مع تجوید، حفظ قرآن، ترجمہ و تفسیر اور بچوں کے لیے بنیادی اسلامی تعلیمات و دعائیں سکھائی جاتی ہیں۔",
-        roman: "Hum basic Noorani Qaida se shuru krte hain ta ke beginners bache aur bare bhi easily seekh sakain. Is k sath Tajweed, Hifz, Tafseer aur Masnoon Duas bhi sikhayi jati hain."
-      }
+    heroSubtitle: {
+      en: "Private 1-on-1 standard online classes for kids & adults scheduled according to your local timezone. Taught by certified Arab & Pakistani tutors.",
+      ar: "دروس خاصة فردية للأطفال والكبار مجدولة حسب منطقتك الزمنية. تحت إشراف معلمين معتمدين.",
+      ur: "بچوں اور بڑوں کے لیے ون آن ون کلاسز، آپ کے پسندیدہ وقت کے مطابق۔ ماہر قاری اور قاریہ کی نگرانی میں۔",
+      fr: "Cours particuliers 1-on-1 pour enfants et adultes selon votre fuseau horaire. Tuteurs arabes certifiés.",
+      de: "Privater 1-zu-1-Koranunterricht für Kinder und Erwachsene, angepasst an Ihre Zeitzone."
     }
+  };
+
+  const getTranslation = (key: keyof typeof t) => {
+    return t[key][language as keyof typeof t[typeof key]] || t[key].en;
+  };
+
+  const stats = [
+    { icon: <Award className="w-5 h-5 text-emerald-700" />, count: "15+", label: "Years of Experience" },
+    { icon: <Users className="w-5 h-5 text-emerald-700" />, count: "2,500+", label: "Active Students" },
+    { icon: <Globe className="w-5 h-5 text-emerald-700" />, count: "25+", label: "Countries Served" },
+    { icon: <BookOpen className="w-5 h-5 text-emerald-700" />, count: "120+", label: "Certified Tutors" },
+    { icon: <Video className="w-5 h-5 text-emerald-700" />, count: "100k+", label: "Lessons Delivered" },
   ];
 
-  const t = {
-    heroBannerSubtitle: {
-      en: "Learn Quran Online with Proper Tajweed Rules",
-      ur: "گھر بیٹھے عالمی اساتذہ سے تجوید کے ساتھ قران پاک سیکھیں",
-      roman: "Ghar Baithe Global Instructors Se Tajweed K Sath Quran Seekhein"
-    },
-    studentsBadge: {
-      en: "8 Years of Quality Quran Teaching Excellence • serving UK, USA, Canada & Australia",
-      ur: "8 سالہ تعلیمی خدمات • یو کے، یو ایس، کینیڈا، آسٹریلیا کے مطمئن طلباء",
-      roman: "8 Years Teaching Excellence • USA, UK, Canada & Australia"
-    },
-    heroBtnLeft: {
-      en: "Register Trial Class",
-      ur: "ٹرائل کلاس رجسٹر کریں",
-      roman: "Trial Class Register Karain"
-    },
-    heroBtnRight: {
-      en: "Contact on WhatsApp",
-      ur: "واٹس ایپ پر رابطہ کریں",
-      roman: "WhatsApp Par Rabta Karain"
-    },
-    whTitle: {
-      en: "Why Choose Worldwide Quran Academy?",
-      ur: "ورلڈ وائیڈ قرآن اکیڈمی ہی کیوں؟",
-      roman: "Worldwide Quran Academy Hi Kyun?"
-    },
-    whSubtitle: {
-      en: "Our professional academic online portal is specifically structured for non-Arabic speakers, kids, and Muslim families living abroad.",
-      ur: "ہم بیرونِ ملک مقیم مسلمان خاندانوں اور بچوں کے لیے آن لائن تعلیم کا سب سے آسان اور مستند طریقہ فراہم کرتے ہیں۔",
-      roman: "Hum bahar ke mulko me rehne wale muslim bacho aur baro ke liye online deeni taleem ka subse asan zariya hain."
-    },
-    whCards: [
-      {
-        id: 1,
-        titleEn: "1-on-1 Interactive Rooms",
-        titleUr: "انفرادی 1-on-1 کلاسز",
-        titleRoman: "1-on-1 Individual Classes",
-        descEn: "Every student gets undivided, concentrated attention from a dedicated scholar. Learn at your own pace without any haste.",
-        descUr: "ہر طالب علم کو انفرادی توجہ ملتی ہے جس سے وہ اپنی رفتار سے صحت اور آسانی کے ساتھ سیکھ سکتے ہیں۔",
-        descRoman: "Har student ko akela parhaya jata hai ta ke teacher ki poori attention mil sake.",
-        icon: Users
-      },
-      {
-        id: 2,
-        titleEn: "Male & Female Qualified Tutors",
-        titleUr: "مرد اور خواتین اساتذہ علیحدہ علیحدہ",
-        titleRoman: "Male & Female Certified Scholars",
-        descEn: "We feature highly-qualified, background-verified male and female Islamic scholars expert in modern digital teaching pedagogy.",
-        descUr: "ہماری اکیڈمی میں تجربہ کار اور نیک سیرت مرد اور خواتین اساتذہ علیحدہ علیحدہ تدریس کے لیے دستیاب ہیں۔",
-        descRoman: "Humare paas certified male aur female scholars separate classes ke liye har waqt available hain.",
-        icon: Award
-      },
-      {
-        id: 3,
-        titleEn: "Flexible Timing 24/7 Shift",
-        titleUr: "24 گھنٹے لچکدار اوقات",
-        titleRoman: "Flexible Timing Options",
-        descEn: "Schedule lessons at your most convenient hour, matching any international timezone seamlessly without disrupting school.",
-        descUr: "اپنے مصروف شیڈول کے مطابق اپنی پسند کا وقت اور دن مقرر کرکے کلاسز کا آغاز کریں۔",
-        descRoman: "Apne busy routine ke mutabiq jab chahein aap class ka time set karwa sakte hain.",
-        icon: Clock
-      },
-      {
-        id: 4,
-        titleEn: "Monthly Assessment Reports",
-        titleUr: "ماہانہ رپورٹ اور امتحان",
-        titleRoman: "Monthly Progress Reports",
-        descEn: "Monitor your children's pronunciation refinement, active Surah memorization, and real-time attendance reports easily.",
-        descUr: "ماہانہ بنیادوں پر طلباء کی کارکردگی اور حاضری کی تفصیلی رکارڈ اور رپورٹس والدین کو مہیا کی جاتی ہیں۔",
-        descRoman: "Monthly basis par bache ki tajweed, attendance aur evaluation report share ki tabi hai.",
-        icon: BookOpen
-      }
-    ],
-    testiTitle: {
-      en: "Trusted by Parents Worldwide",
-      ur: "دنیا بھر کے مطمئن والدین کا اعتماد",
-      roman: "Overseas Parents & Students Reviews"
-    },
-    testiSubtitle: {
-      en: "See what Muslim families from UK, USA, Europe, and Australia say about our online classes.",
-      ur: "جانئے کہ امریکہ، برطانیہ اور آسٹریلیا کے مطمئن والدین ہماری تدریسی معیار کے بارے میں کیا کہتے ہیں۔",
-      roman: "Check karain USA, UK aur Australia se parents hamare bad parhane pr kya reviews dete hain."
-    },
-    faqSecTitle: {
-      en: "Frequently Asked Questions",
-      ur: "عام طور پر پوچھے جانے والے سوالات",
-      roman: "Aam Tor Par Pooche Jane Wale Sawal"
-    },
-    faqSecSubtitle: {
-      en: "Find quick answers to common queries about our 1-on-1 online classes, scheduling, and tutors.",
-      ur: "کلاسز، فیس، اور اساتذہ کے بارے میں اکثر پوچھے جانے والے سوالات کے فوری جوابات یہاں حاصل کہیئے۔",
-      roman: "Hamare online programs ke mutabiq typical questions ke answers hasil karain."
-    }
-  };
-
-  const isUr = lang === "ur";
-
   return (
-    <div className="flex-1">
+    <div className="space-y-24 pb-20" id="homepage-container">
       
-      {/* HERO SECTION */}
-      <section id="hero-section" className="relative bg-gradient-to-br from-white via-emerald-50/15 to-amber-50/10 text-slate-800 overflow-hidden py-16 lg:py-24 border-b border-slate-100">
-        <div className="absolute top-1/2 left-5 w-72 h-72 bg-gradient-to-br from-amber-400/[0.02] to-emerald-500/[0.02] rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-20 right-10 w-96 h-96 bg-emerald-500/[0.03] rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+      {/* 1. Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/70 to-transparent pt-16 pb-20" id="hero-section">
+        {/* Subtle background arabesque geometry pattern or elements */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          
-          <div className={`col-span-1 lg:col-span-7 space-y-6 ${isUr ? "text-right" : "text-left"}`} style={{ direction: isUr ? "rtl" : "ltr" }}>
-            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-850 text-xs px-3.5 py-1.5 rounded-full font-bold border border-emerald-200/60 shadow-3xs">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-              <span>{t.studentsBadge[lang]}</span>
-            </span>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-5.5xl font-serif font-extrabold text-slate-900 leading-tight">
-              {lang === "en" ? (
-                <>
-                  Learn Holy Quran Online <br />
-                  <span className="text-emerald-700 bg-gradient-to-r from-emerald-700 via-emerald-850 to-emerald-900 bg-clip-text text-transparent not-italic font-bold">
-                    With True Tajweed Rules
-                  </span>
-                </>
-              ) : t.heroBannerSubtitle[lang]}
-            </h1>
-
-            <p className="text-slate-650 text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl font-sans font-medium">
-              {lang === "en" ? config.taglineEn : lang === "ur" ? config.taglineUr : config.taglineRoman}
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-3">
-              <button
-                type="button"
-                onClick={() => onNavigate("contact")}
-                className="w-full sm:w-auto bg-emerald-750 hover:bg-emerald-850 text-white font-extrabold py-3.5 px-8 rounded-2xl transition-all duration-200 text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-md hover:translate-y-[-1px] cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
-                <span>{t.heroBtnLeft[lang]}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <a
-                href={getWhatsappLink()}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full sm:w-auto bg-white hover:bg-slate-50 text-emerald-800 font-extrabold py-3.5 px-8 rounded-2xl transition-all duration-200 text-xs tracking-wider uppercase border border-emerald-250 shadow-3xs flex items-center justify-center gap-2"
-              >
-                <MessageCircle className="w-4.5 h-4.5 text-emerald-750 fill-emerald-100" />
-                <span>{t.heroBtnRight[lang]}</span>
-              </a>
-            </div>
-
-            {/* Quick trust metrics */}
-            <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-200/60 max-w-lg">
-              <div>
-                <div className="text-xl md:text-2xl font-bold text-emerald-800">500+</div>
-                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Passed Students</div>
-              </div>
-              <div>
-                <div className="text-xl md:text-2xl font-bold text-emerald-800">8+ Yrs</div>
-                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Teaching Experience</div>
-              </div>
-              <div>
-                <div className="text-xl md:text-2xl font-bold text-emerald-800">1-on-1</div>
-                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Live Classes</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Custom Illustration Frame */}
-          <div className="col-span-1 lg:col-span-5 relative flex justify-center items-center">
-            <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/10 to-amber-400/5 rounded-3xl blur-2xl transform rotate-3 scale-95 pointer-events-none"></div>
-            <div className="relative border-4 border-white shadow-2xl rounded-2.5xl overflow-hidden bg-emerald-50 hover:scale-[1.01] transition-transform duration-300 aspect-[4/3] w-full max-w-md">
-              <img 
-                src={childLearningImg} 
-                alt="Muslim child reading and learning Quran with teacher online" 
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover pointer-events-none"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
-              <div className="absolute bottom-4 inset-x-4 text-white flex items-center gap-2.5">
-                <div className="bg-emerald-600 p-2 rounded-full border border-white/20">
-                  <Heart className="w-3.5 h-3.5 text-white fill-white animate-pulse" />
-                </div>
-                <p className="text-[11px] font-serif font-bold drop-shadow-md">
-                  {lang === "en" ? "Structured with certified scholars for your kid's pure future." : "بچوں کے بہترین دینی مستقبل کا شاندار آغاز۔"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* WHY CHOOSE US SECTION */}
-      <section id="why-choose-us" className="py-20 bg-white border-b border-slate-100 scroll-mt-20 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-850 text-xs px-3.5 py-1.5 rounded-full font-bold uppercase tracking-wider border border-emerald-250 shadow-3xs mb-3">
-              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-300" />
-              <span>{lang === "en" ? "Our Academic Excellence" : "ہمارا تدریسی معیار"}</span>
-            </span>
-            <h2 className="text-2xl md:text-3.5xl font-serif font-extrabold text-slate-900 tracking-tight">
-              {t.whTitle[lang]}
-            </h2>
-            <p className="mt-4 text-slate-600 text-sm md:text-base max-w-3xl mx-auto leading-relaxed">
-              {t.whSubtitle[lang]}
-            </p>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Left Info Column */}
+            <div className="lg:col-span-7 space-y-6" id="hero-left-column">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 rounded-full text-emerald-900 text-xs font-bold uppercase tracking-wider shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 fill-emerald-800 text-emerald-800" />
+                3-Day Free Trial Class • No Card Required
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {t.whCards.map((card) => {
-              const IconComp = card.icon;
-              return (
-                <div 
-                  key={card.id}
-                  id={`why-card-${card.id}`}
-                  className="bg-slate-50/55 rounded-2xl p-6.5 border border-slate-200/80 hover:border-emerald-600/30 hover:bg-white hover:shadow-xl transition-all duration-350 relative group"
-                >
-                  <div className="absolute top-0 inset-x-0 h-1 bg-transparent group-hover:bg-amber-400 rounded-t-2xl transition-colors duration-300" />
-                  
-                  <div className="p-3.5 bg-emerald-50 text-emerald-800 rounded-xl w-fit border border-emerald-100 mb-5 group-hover:bg-emerald-700 group-hover:text-white transition-all duration-300">
-                    <IconComp className="w-5 h-5" />
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-emerald-950 font-sans leading-[1.1]">
+                {getTranslation("heroTitle")}
+              </h2>
+
+              <p className="text-base sm:text-lg text-emerald-950/70 leading-relaxed font-sans max-w-2xl">
+                {getTranslation("heroSubtitle")}
+              </p>
+
+              {/* Trust badges */}
+              <div className="flex flex-wrap items-center gap-6 pt-2 text-sm text-emerald-950/80">
+                <div className="flex items-center gap-1.5 font-extrabold text-emerald-900 bg-emerald-100/60 px-3 py-1 rounded-full border border-emerald-950/5">
+                  <Award className="w-4 h-4 text-emerald-800" />
+                  <span>15+ Years of Experience</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-bold">
+                  <div className="flex text-amber-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-500 stroke-amber-500" />
+                    ))}
                   </div>
-                  
-                  <h3 className="text-base font-bold text-slate-800 font-serif mb-2.5">
-                    {lang === "en" ? card.titleEn : lang === "ur" ? card.titleUr : card.titleRoman}
-                  </h3>
-                  
-                  <p className="text-slate-600 text-xs leading-relaxed font-sans font-medium">
-                    {lang === "en" ? card.descEn : lang === "ur" ? card.descUr : card.descRoman}
-                  </p>
+                  <span>4.9 on Trustpilot</span>
                 </div>
-              );
-            })}
-          </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-4.5 h-4.5 text-emerald-700" />
+                  <span>Female Teachers Available</span>
+                </div>
+              </div>
 
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-4" id="hero-cta-buttons">
+                <button
+                  id="cta-hero-book-trial"
+                  onClick={onBookTrial}
+                  className="px-8 py-4 bg-emerald-900 hover:bg-emerald-950 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/10 transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                >
+                  Book 3-Day Free Trial
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  id="cta-hero-courses"
+                  onClick={() => onPageChange("courses")}
+                  className="px-8 py-4 bg-white hover:bg-slate-50 text-emerald-950 font-bold rounded-xl border border-emerald-950/10 shadow-sm transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Explore Our Courses
+                </button>
+              </div>
+            </div>
+
+            {/* Right Graphics/Promo Column */}
+            <div className="lg:col-span-5 flex justify-center relative" id="hero-right-column">
+              <div className="relative w-full max-w-md">
+                <div className="absolute inset-0 bg-emerald-900/10 rounded-2xl rotate-3 scale-102" />
+                <img
+                  src="/src/assets/images/hero_online_class_1782394008110.jpg"
+                  alt="Child studying Quran online on laptop with parent"
+                  className="relative rounded-2xl shadow-xl w-full object-cover aspect-[4/3] border border-emerald-900/10"
+                  referrerPolicy="no-referrer"
+                />
+                
+                {/* Floating pill indicators */}
+                <div className="absolute -bottom-6 -left-6 bg-white border border-emerald-950/10 rounded-2xl shadow-lg p-4 flex items-center gap-3 animate-bounce-slow">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-800">
+                    <Video className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-emerald-950">1-on-1 Zoom</p>
+                    <p className="text-[10px] text-emerald-950/50">Highly Interactive</p>
+                  </div>
+                </div>
+
+                <div className="absolute -top-6 -right-6 bg-emerald-900 text-white rounded-2xl shadow-lg p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-amber-300">
+                    <Star className="w-5 h-5 fill-amber-300 stroke-amber-300" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold">100% Satisfied</p>
+                    <p className="text-[10px] text-emerald-200">Refund Guarantee</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 
-      {/* TESTIMONIALS SECTION */}
-      <section id="testimonials-section" className="py-20 bg-neutral-50/50 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-850 text-xs px-3.5 py-1.5 rounded-full font-bold uppercase tracking-wider border border-emerald-250 shadow-3xs mb-3">
-              <Users className="w-3.5 h-3.5 text-emerald-700" />
-              <span>{lang === "en" ? "Reviews & Feedback" : "والدین کی آراء"}</span>
-            </span>
-            <h2 className="text-2xl md:text-3.5xl font-serif font-extrabold text-slate-900 tracking-tight">
-              {t.testiTitle[lang]}
-            </h2>
-            <p className="mt-4 text-slate-650 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-              {t.testiSubtitle[lang]}
-            </p>
-          </div>
+      {/* 2. Bento Statistics Grid */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="statistics-section">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 bg-white border border-emerald-950/10 shadow-lg rounded-2xl p-6 sm:p-8" id="stats-inner-grid">
+          {stats.map((stat, idx) => (
+            <div key={idx} className="flex items-center gap-4 p-4 lg:border-r lg:last:border-r-0 border-emerald-950/5" id={`stat-col-${idx}`}>
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                {stat.icon}
+              </div>
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-emerald-950 leading-none">{stat.count}</p>
+                <p className="text-xs font-medium text-emerald-950/60 mt-1">{stat.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {initialTestimonials.map((t, idx) => (
-              <div 
-                key={idx}
-                className="bg-white rounded-2.5xl p-6.5 border border-slate-200/85 shadow-sm relative hover:shadow-md transition-shadow"
-              >
-                {/* 5 Stars rating */}
-                <div className="flex items-center gap-1 text-amber-400 mb-4">
+      {/* 3. Featured Courses */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="featured-courses-section">
+        <div className="text-center mb-12">
+          <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-100 px-3 py-1 rounded-full">
+            Our Programs
+          </span>
+          <h3 className="text-3xl sm:text-4xl font-bold text-emerald-950 mt-3">Featured Online Quran Courses</h3>
+          <p className="text-emerald-950/60 text-sm sm:text-base mt-2 max-w-2xl mx-auto">
+            Our structured, outcome-driven programs are tailored for absolute beginners, school kids, and busy adults who want to perfect their recitation.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="featured-courses-grid">
+          {COURSES.slice(0, 3).map((course, idx) => (
+            <motion.div
+              key={course.id}
+              id={`featured-course-card-${course.id}`}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1, duration: 0.35 }}
+              className="bg-white rounded-2xl border border-emerald-950/10 shadow-md overflow-hidden hover:border-emerald-900/30 transition-all hover:shadow-lg flex flex-col h-full"
+            >
+              <img src={course.image} alt={course.title} className="w-full h-48 object-cover border-b border-emerald-950/5" />
+              <div className="p-6 flex-grow flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs font-bold text-emerald-700 uppercase mb-2">
+                    <span>{course.level}</span>
+                    <span className="text-emerald-950/50">{course.duration}</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-emerald-950 mb-2 leading-snug">{course.title}</h4>
+                  <p className="text-sm text-emerald-950/70 font-sans leading-relaxed mb-4">{course.description}</p>
+                </div>
+
+                <div className="border-t border-emerald-950/5 pt-4 flex items-center justify-between">
+                  <button
+                    onClick={() => onPageChange("courses")}
+                    className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1.5 transition-colors"
+                  >
+                    View Curriculum
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={onBookTrial}
+                    className="px-4 py-2 rounded-lg bg-emerald-900 hover:bg-emerald-950 text-white font-bold text-[11px] transition-all"
+                  >
+                    Enroll Free
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Syllabus Section (Inserted for absolute clarity) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="syllabus-integration-section">
+        <SyllabusSection />
+      </section>
+
+      {/* 5. Why Choose Us */}
+      <section className="bg-emerald-900 text-white py-20" id="why-choose-us-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Left Texts */}
+            <div className="lg:col-span-7 space-y-6" id="why-left-text">
+              <span className="text-xs font-bold text-emerald-300 uppercase tracking-widest bg-emerald-800/80 px-3 py-1 rounded-full">
+                Safety & Assurance
+              </span>
+              <h3 className="text-3xl sm:text-4xl font-bold tracking-tight">The Best 1-on-1 Learning Environment</h3>
+              <p className="text-emerald-200/80 text-sm sm:text-base leading-relaxed font-sans max-w-2xl">
+                Unlike local Islamic centers or crowded classrooms, Worldwide Quran Academy guarantees individual focused tutoring. Our classes are fully secure, recorded for quality, and supervised by senior supervisors.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4" id="why-features-grid">
+                {[
+                  { title: "Safe & Secure Videos", desc: "Private portals with supervisor monitoring" },
+                  { title: "Customized Pace", desc: "No peer pressure, learn at student's speed" },
+                  { title: "Flexible Makeup Classes", desc: "Reschedule anytime with 12 hours notice" },
+                  { title: "Parent progress reports", desc: "Get detailed scorecards and logs monthly" }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-bold">{item.title}</h4>
+                      <p className="text-xs text-emerald-200/60 font-sans mt-0.5">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Graphics */}
+            <div className="lg:col-span-5 flex justify-center" id="why-right-graphics">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-6 max-w-sm w-full shadow-2xl backdrop-blur-md">
+                <h4 className="text-lg font-bold text-center border-b border-white/10 pb-4">Our Teacher Accreditations</h4>
+                
+                {[
+                  { label: "Ijazah Certified Huffaz", text: "Verified authority to teach Quranic recitation" },
+                  { label: "English & Arabic Fluent", text: "Fluent communications with young students" },
+                  { label: "Child Psychology Trained", text: "Specialized gentle teaching skills for kids" }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-800 flex items-center justify-center font-bold text-emerald-300 flex-shrink-0">
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{item.label}</p>
+                      <p className="text-xs text-emerald-200/70 font-sans mt-0.5">{item.text}</p>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="pt-2 flex items-center justify-center gap-2 text-emerald-300 text-xs font-semibold">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  Authorized Online Quran Provider
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Parent Testimonials */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="testimonials-section">
+        <div className="text-center mb-12">
+          <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-100 px-3 py-1 rounded-full">
+            Verified Reviews
+          </span>
+          <h3 className="text-3xl sm:text-4xl font-bold text-emerald-950 mt-3">What Our Blessed Families Say</h3>
+          <p className="text-emerald-950/60 text-sm mt-2">
+            Masha'Allah, we have helped hundreds of families globally reconnect with the Holy Quran. Here is their honest feedback.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8" id="testimonials-cards-grid">
+          {TESTIMONIALS.map((t) => (
+            <div key={t.id} id={`testimonial-${t.id}`} className="bg-white p-6 rounded-2xl border border-emerald-950/10 shadow-md flex flex-col justify-between hover:shadow-lg transition-shadow">
+              <div className="space-y-4">
+                <div className="flex text-amber-500">
                   {[...Array(t.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400" />
+                    <Star key={i} className="w-4 h-4 fill-amber-500 stroke-amber-500" />
                   ))}
                 </div>
-
-                <p className="text-slate-650 text-xs sm:text-sm leading-relaxed mb-6 font-medium italic">
-                  "{lang === "en" ? t.textEn : lang === "ur" ? t.textUr : t.textRoman}"
-                </p>
-
-                <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-auto">
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.name}</h4>
-                    <p className="text-[10px] text-slate-400 font-bold tracking-wider uppercase mt-0.5">{t.location}</p>
-                  </div>
-                  <span className="bg-emerald-50 text-emerald-800 text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase border border-emerald-150">
-                    {t.course.split(" ")[0]}
-                  </span>
-                </div>
+                <p className="text-sm italic text-emerald-950/80 leading-relaxed font-sans font-medium">"{t.text}"</p>
               </div>
-            ))}
-          </div>
 
-        </div>
-      </section>
-
-      {/* FAQ SECTION */}
-      <section id="faq-section" className="py-20 bg-white scroll-mt-20 border-b border-slate-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-850 text-xs px-3.5 py-1.5 rounded-full font-bold uppercase tracking-wider border border-emerald-250 mb-3 shadow-3xs">
-              <HelpCircle className="w-3.5 h-3.5 text-emerald-700" />
-              <span>{lang === "en" ? "Got Questions?" : "سوالات و جوابات"}</span>
-            </span>
-            <h2 className="text-2xl md:text-3.5xl font-serif font-extrabold text-slate-900 tracking-tight">
-              {t.faqSecTitle[lang]}
-            </h2>
-            <p className="mt-4 text-slate-650 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-              {t.faqSecSubtitle[lang]}
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, index) => {
-              const isOpen = openFaqIndex === index;
-              const faqQuestion = lang === "en" ? faq.q.en : lang === "ur" ? faq.q.ur : faq.q.roman;
-              const faqAnswer = lang === "en" ? faq.a.en : lang === "ur" ? faq.a.ur : faq.a.roman;
-
-              return (
-                <div 
-                  key={index} 
-                  id={`faq-item-${index}`}
-                  className="bg-slate-50/40 border border-slate-200/80 rounded-2xl shadow-3xs overflow-hidden transition-all duration-300 hover:border-emerald-650/20"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                    className="w-full py-5 px-6 flex items-center justify-between text-left gap-4 font-serif text-sm md:text-base font-bold text-slate-800 hover:text-emerald-800 transition-colors cursor-pointer"
-                    style={{ direction: isUr ? "rtl" : "ltr" }}
-                  >
-                    <span className={isUr ? "text-right" : "text-left"}>{faqQuestion}</span>
-                    <div className="p-1.5 bg-white text-slate-500 border border-slate-200 rounded-lg shrink-0">
-                      {isOpen ? (
-                        <Minus className="w-3.5 h-3.5 text-emerald-800" />
-                      ) : (
-                        <Plus className="w-3.5 h-3.5 text-slate-700" />
-                      )}
-                    </div>
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
-                      >
-                        <div 
-                          className="px-6 pb-6 pt-1 text-xs md:text-sm text-slate-650 leading-relaxed border-t border-slate-100"
-                          style={{ direction: isUr ? "rtl" : "ltr" }}
-                        >
-                          <p className={isUr ? "text-right" : "text-left"}>{faqAnswer}</p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+              <div className="border-t border-emerald-950/5 pt-4 mt-6 flex items-center justify-between">
+                <div>
+                  <h5 className="text-sm font-bold text-emerald-950">{t.name}</h5>
+                  <p className="text-xs text-emerald-950/50">{t.location}</p>
                 </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
-      {/* CALL TO ACTION HELPLINE BAR */}
-      <section id="direct-support-banner" className="py-16 bg-gradient-to-r from-emerald-850 to-emerald-950 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-emerald-900/10 pointer-events-none opacity-40"></div>
-        <div className="absolute top-0 right-10 w-64 h-64 bg-amber-400/[0.04] rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-5">
-          <span className="bg-amber-400/20 text-amber-300 text-[10px] tracking-widest font-extrabold px-3 py-1 rounded-full uppercase border border-amber-300/30 inline-block font-sans">
-            Worldwide Quran Academy Support 24/7
-          </span>
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-white leading-tight">
-            Take Your First Step Towards Proper Quranic Journey
-          </h2>
-          <p className="text-emerald-100 text-sm max-w-2xl mx-auto leading-relaxed">
-            Get 1-on-1 expert classes in your local timezone. Register for trial in 2 minutes. Feel free to contact our coordinator directly on WhatsApp.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <div className="bg-emerald-900/60 border border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3">
-              <Phone className="w-5 h-5 text-amber-300" />
-              <div className="text-left font-sans">
-                <div className="text-[9px] text-emerald-250 font-bold uppercase tracking-wider">Dial Helpline</div>
-                <div className="text-sm font-black font-mono tracking-wider">{config.phone}</div>
+                <span className="text-[10px] font-bold text-emerald-800 uppercase bg-emerald-50 px-2.5 py-1 rounded-full">
+                  {t.relation}
+                </span>
               </div>
             </div>
+          ))}
+        </div>
+      </section>
 
-            <a
-              href={getWhatsappLink()}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-extrabold py-3.5 px-8 rounded-2xl transition-all text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:translate-y-[-1.5px] cursor-pointer"
-            >
-              <MessageCircle className="w-4.5 h-4.5 text-emerald-950 fill-emerald-950" />
-              <span>Contact on WhatsApp</span>
-            </a>
-          </div>
+      {/* 7. FAQs Accordion */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6" id="faq-section">
+        <div className="text-center mb-12">
+          <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-100 px-3 py-1 rounded-full">
+            Got Questions?
+          </span>
+          <h3 className="text-3xl font-bold text-emerald-950 mt-3">Frequently Asked Questions</h3>
+          <p className="text-emerald-950/60 text-sm mt-2">
+            Find quick answers to common questions about trials, tutors, classes, and schedules.
+          </p>
+        </div>
+
+        <div className="space-y-4" id="faqs-list-wrapper">
+          {FAQS.map((faq, idx) => {
+            const isOpen = activeFaq === idx;
+            return (
+              <div
+                key={idx}
+                id={`faq-item-${idx}`}
+                className="bg-white border border-emerald-950/10 rounded-xl overflow-hidden transition-all shadow-sm"
+              >
+                <button
+                  onClick={() => toggleFaq(idx)}
+                  className="flex items-center justify-between w-full p-5 text-left text-emerald-950 font-bold hover:bg-slate-50/50 transition-colors"
+                >
+                  <span className="flex items-center gap-2.5 text-sm sm:text-base">
+                    <HelpCircle className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                    {faq.q}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-emerald-700/60 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: "auto" }}
+                      exit={{ height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden bg-[#faf9f5]/50 border-t border-emerald-950/5"
+                    >
+                      <p className="p-5 text-sm text-emerald-950/70 leading-relaxed font-sans">{faq.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 {
   "name": "Worldwide Quran Academy",
-  "description": "Premium online learning portal for Worldwide Quran Academy offering 1-on-1 virtual Quran classes with Tajweed, Tafseer, and Islamic studies.",
+  "description": "Learn Quran Online with Tajweed from experienced tutors. 1-on-1 standard structured classes for kids and adults.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

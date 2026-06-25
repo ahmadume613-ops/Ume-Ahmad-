@@ -1,218 +1,167 @@
-import { useState, useEffect, FormEvent } from "react";
-import { LanguageMode } from "../types";
-import { Lock, FileText, Globe, Plus, Trash2, Key, Image, CheckCircle, LogOut, LayoutDashboard, Star } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Users, Mail, BookOpen, Settings, Check, Trash2, Calendar, Phone, MapPin, Sparkles, Filter, ChevronRight, Lock } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { COURSES } from "../data";
 
-interface AdminPageProps {
-  lang: LanguageMode;
-}
-
-interface BlogPost {
-  id: string;
-  title: { en: string; ur: string };
-  category: { en: string; ur: string };
-  readTime: string;
-  date: string;
-  author: string;
-  excerpt: { en: string; ur: string };
-  content: { en: string; ur: string };
-  imagePlaceholderColor: string;
-  imageUrl?: string;
-}
-
-export default function AdminPage({ lang }: AdminPageProps) {
-  // Authentication states
-  const [password, setPassword] = useState("");
+export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
 
-  // CMS states
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [titleEn, setTitleEn] = useState("");
-  const [titleUr, setTitleUr] = useState("");
-  const [category, setCategory] = useState("parents");
-  const [imageUrl, setImageUrl] = useState("");
-  const [readTime, setReadTime] = useState("5 min read");
-  const [author, setAuthor] = useState("Academy Instructor");
-  const [excerptEn, setExcerptEn] = useState("");
-  const [excerptUr, setExcerptUr] = useState("");
-  const [contentEn, setContentEn] = useState("");
-  const [contentUr, setContentUr] = useState("");
-  
-  // UX states
-  const [successMsg, setSuccessMsg] = useState("");
+  const [activeTab, setActiveTab] = useState<"bookings" | "messages" | "blogs">("bookings");
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
 
-  // Default blog posts as backup/initial seed
-  const defaultBlogPosts: BlogPost[] = [
-    {
-      id: "post-1",
-      category: { en: "parents", ur: "parents" },
-      title: {
-        en: "How to Teach Noorani Qaida to Kids Online at Home",
-        ur: "بچوں کو گھر بیٹھے آن لائن نورانی قاعدہ سکھانے کا آسان طریقہ"
-      },
-      readTime: "5 min read",
-      date: "June 20, 2026",
-      author: "Mufti Muhammad Bilal",
-      excerpt: {
-        en: "Discover 5 practical strategies used by our certified male and female scholars to keep kids engaged, focused, and motivated during virtual Noorani Qaida lessons.",
-        ur: "جانئے وہ 5 بہترین طریقے جن کے ذریعے ہمارے شفیق اساتذہ چھوٹے بچوں کو زوم اور اسکائپ پر دلچسپی کے ساتھ بنیادی قاعدہ اور مخارج سکھاتے ہیں۔"
-      },
-      content: {
-        en: "Teaching Noorani Qaida to young children is the foundational step of their Quranic journey. When doing it online, parents can support kids through simple daily habits:\n\n1. Establish a Quiet Learning Corner: Choose a quiet room away from sibling noise and toys so your child can hear the teacher's pronunciation perfectly.\n2. Keep Sessions Short and Sweet: A 30-minute 1-on-1 class is the absolute sweet spot for kids under 8. It maximizes attention spans without causing fatigue.\n3. Reward and Appreciate: Always praise your kid when they correctly pronounce difficult Arabic letters like Qaf (ق), Ha (ح), or 'Ain (ع).\n4. Review on Off-Days: Spend just 10 minutes repeating yesterday's lesson. This builds solid memory foundations before the next session.\n5. Partner with the Tutor: Ensure communication is active. Our academy provides progress report cards so parents are always aware.",
-        ur: "چھوٹے بچوں کو نورانی قاعدہ سکھانا ان کے اسلامی تعلیمی سفر کا پہلا اور بنیادی قدم ہے۔ آن لائن کلاسز کے دوران والدین ان آسان طریقوں سے بچوں کی مدد کر سکتے ہیں:\n\n1۔ پرسکون جگہ کا انتخاب: پڑھائی کے لیے گھر میں ایک ایسی جگہ مختص کریں جہاں شور نہ ہو تاکہ بچہ استاد کی آواز اور مخارج کو واضح طور پر سن سکے۔\n2۔ وقت کی پابندی اور مختصر دورانیہ: چھوٹے بچوں کے لیے 30 منٹ کی 1-on-1 کلاس بہترین ہوتی ہے۔ اس سے بچہ تھکتا نہیں اور توجہ برقرار رہتی ہے۔\n3۔ حوصلہ افزائی کیجیئے: جب بچہ مشکل حروف جیسے (ق)، (ح) یا (ع) کو صحیح مخرج سے پڑھے تو اس کی تعریف کریں۔\n4۔ پچھلے سبق کی دہرائی: غیر حاضری یا چھٹی کے دن صرف 10 منٹ نکال کر پرانے سبق کی دہرائی کروائیں۔ یہ یادداشت کو مضبوط کرتا ہے۔\n5۔ اساتذہ کے ساتھ رابطہ: اکیڈمی باقاعدگی سے والدین کو کارکردگی رپورٹ فراہم کرتی ہے، اس کو ضرور چیک کریں۔"
-      },
-      imagePlaceholderColor: "from-emerald-600 to-teal-800"
-    },
-    {
-      id: "post-2",
-      category: { en: "tajweed", ur: "tajweed" },
-      title: {
-        en: "Understanding the Core Rules of Tajweed: A Beginner's Guide",
-        ur: "علمِ تجوید کے بنیادی قواعد: نو آموز طلباء کے لیے ایک رہنما گائیڈ"
-      },
-      readTime: "8 min read",
-      date: "June 15, 2026",
-      author: "Qari Ahmed Raza",
-      excerpt: {
-        en: "What is Tajweed? Why is it mandatory to recite the Quran with proper pronunciation? Learn about the standard rules of Madd, Noon Sakinah, and Meem Sakinah.",
-        ur: "تجوید کیا ہے؟ قران کریم کو تجوید کے ساتھ پڑھنا کیوں ضروری ہے؟ نون ساکن، میم ساکن اور حروفِ مد کے بنیادی اصول آسان الفاظ میں سیکھیں۔"
-      },
-      content: {
-        en: "The word 'Tajweed' literally means to beautify, refine, or deliver excellence. In Islamic terminology, it refers to reciting every Arabic letter of the holy Quran from its exact point of articulation (makhraj) with its proper characteristics.\n\nWhy is Tajweed Mandatory?\nArabic is a rich and sensitive language. A minor change in pronunciation can completely alter the meaning of a word. For example, 'Qalb' (قلب) with a Qaf means 'Heart', whereas 'Kalb' (كلب) with a Kaf means 'Dog'. Reciting correctly is an obligation for every Muslim.\n\nKey Beginner Rules:\n1. Makhraj (Points of Articulation): Knowing where sounds originate—the throat, tongue, lips, or nose.\n2. Rules of Noon Sakinah & Tanween: Explains when to hide the sound (Ikhfa), merge the letters (Idgham), read clearly (Izhar), or change sound to Meem (Iqlab).\n3. Rules of Madd: Stretching certain vowel sounds to give weight and traditional beauty to recitation.\n4. Rules of Waqf (Stopping): Learning when to pause and how to stop correctly at the end of verses.",
-        ur: "تجوید کا لفظی مطلب ہے 'خوبصورت بنانا' یا 'بہترین طریقے سے ادا کرنا'۔ اسلامی اصطلاح میں، قرآنِ مجید کے ہر حرف کو اس کے مخصوص مخرج سے تمام صفات کے ساتھ ادا کرنے کو علمِ تجوید کہتے ہیں۔\n\nتجوید کی ضرورت اور اہمیت:\nعربی زبان میں مخارج کی تھوڑی سی تبدیلی سے معنی یکسر بدل جاتے ہیں۔ مثال کے طور پر 'قلب' (ق کے ساتھ) کا مطلب 'دل' ہے، جبکہ 'کلب' (ک کے ساتھ) کا مطلب 'کتا' ہے۔ اس لیے درست قواعد کے ساتھ تلاوت کرنا ہر مسلمان پر لازم ہے۔\n\nبنیادی اصول:\n1۔ مخارج کا علم: یہ جاننا کہ کون سا حرف حلق، زبان، ہونٹوں یا ناک سے ادا ہوتا ہے۔\n2۔ نون ساکن اور تنوین کے قواعد: اس میں اخفاء (آواز چھپانا)، ادغام (حروف ملانا)، اظہار (واضح پڑھنا) اور اقلاب (میم سے بدلنا) شامل ہیں۔\n3۔ وقف کے اصول: تلاوت کے دوران کہاں سانس روکنا ہے اور کس طرح آیت کا اختتام کرنا ہے۔"
-      },
-      imagePlaceholderColor: "from-emerald-700 to-emerald-950"
-    }
-  ];
+  // Simulation Blog State
+  const [newBlog, setNewBlog] = useState({
+    title: "",
+    excerpt: "",
+    body: "",
+    author: "Academy Administrator"
+  });
+  const [blogSuccess, setBlogSuccess] = useState(false);
 
   useEffect(() => {
-    // Load published posts from localStorage
-    const savedPosts = localStorage.getItem("wqa_blog_posts");
-    if (savedPosts) {
-      try {
-        setPosts(JSON.parse(savedPosts));
-      } catch (e) {
-        setPosts(defaultBlogPosts);
-      }
-    } else {
-      setPosts(defaultBlogPosts);
-      localStorage.setItem("wqa_blog_posts", JSON.stringify(defaultBlogPosts));
+    // Check if authenticated in session
+    const authState = sessionStorage.getItem("admin_authenticated");
+    if (authState === "true") {
+      setIsAuthenticated(true);
     }
+    loadData();
   }, []);
 
-  const handleLogin = (e: FormEvent) => {
+  const loadData = () => {
+    // Load bookings
+    const bookingsStr = localStorage.getItem("trial_bookings") || "[]";
+    setBookings(JSON.parse(bookingsStr));
+
+    // Load messages
+    const messagesStr = localStorage.getItem("contact_messages") || "[]";
+    setMessages(JSON.parse(messagesStr));
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "WQA2026!") {
+    if (password === "admin123" || password === "quranadmin") {
       setIsAuthenticated(true);
-      setErrorMsg("");
+      sessionStorage.setItem("admin_authenticated", "true");
+      setAuthError("");
     } else {
-      setErrorMsg("Incorrect access password! Please verify and try again.");
+      setAuthError("Incorrect admin credentials. Try 'admin123'.");
     }
   };
 
-  const handlePublish = (e: FormEvent) => {
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem("admin_authenticated");
+  };
+
+  // Delete booking
+  const handleDeleteBooking = (id: string) => {
+    const updated = bookings.filter((b) => b.id !== id);
+    localStorage.setItem("trial_bookings", JSON.stringify(updated));
+    setBookings(updated);
+  };
+
+  // Change booking status
+  const handleToggleStatus = (id: string) => {
+    const updated = bookings.map((b) => {
+      if (b.id === id) {
+        const nextStatus = b.status === "Enrolled" ? "Pending" : b.status === "Contacted" ? "Enrolled" : "Contacted";
+        return { ...b, status: nextStatus };
+      }
+      return b;
+    });
+    localStorage.setItem("trial_bookings", JSON.stringify(updated));
+    setBookings(updated);
+  };
+
+  // Delete message
+  const handleDeleteMessage = (id: string) => {
+    const updated = messages.filter((m) => m.id !== id);
+    localStorage.setItem("contact_messages", JSON.stringify(updated));
+    setMessages(updated);
+  };
+
+  // Handle Mock Blog Submission
+  const handleBlogSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!titleEn || !contentEn) {
-      setErrorMsg("English Title and Content are required fields!");
-      return;
-    }
-
-    // Build default values for Urdu if missing
-    const finalTitleUr = titleUr || titleEn;
-    const finalExcerptEn = excerptEn || contentEn.slice(0, 150) + "...";
-    const finalExcerptUr = excerptUr || (contentUr ? contentUr.slice(0, 150) + "..." : finalExcerptEn);
-    const finalContentUr = contentUr || contentEn;
-
-    const newPost: BlogPost = {
-      id: "post-" + Date.now(),
-      category: { en: category, ur: category },
-      title: { en: titleEn, ur: finalTitleUr },
-      readTime,
-      date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
-      author,
-      excerpt: { en: finalExcerptEn, ur: finalExcerptUr },
-      content: { en: contentEn, ur: finalContentUr },
-      imagePlaceholderColor: "from-emerald-600 via-teal-700 to-emerald-900",
-      imageUrl: imageUrl || undefined
+    const blogPost = {
+      _id: "mock_" + Date.now(),
+      title: newBlog.title,
+      slug: { current: newBlog.title.toLowerCase().replace(/\s+/g, "-") },
+      publishedAt: new Date().toISOString(),
+      excerpt: newBlog.excerpt,
+      body: newBlog.body,
+      author: newBlog.author
     };
 
-    const updatedPosts = [newPost, ...posts];
-    setPosts(updatedPosts);
-    localStorage.setItem("wqa_blog_posts", JSON.stringify(updatedPosts));
+    // Add to default local blogs
+    const currentBlogsStr = localStorage.getItem("trial_blogs") || "[]";
+    const currentBlogs = JSON.parse(currentBlogsStr);
+    currentBlogs.unshift(blogPost);
+    localStorage.setItem("trial_blogs", JSON.stringify(currentBlogs));
 
-    // Reset Form Fields
-    setTitleEn("");
-    setTitleUr("");
-    setImageUrl("");
-    setExcerptEn("");
-    setExcerptUr("");
-    setContentEn("");
-    setContentUr("");
-    setSuccessMsg("Article published successfully! It is now live on the Informative Articles (/blog) page.");
-    setErrorMsg("");
+    // Force append to Sanity-mock dataset locally
+    setBlogSuccess(true);
+    setNewBlog({ title: "", excerpt: "", body: "", author: "Academy Administrator" });
 
-    // Hide success message after 5 seconds
     setTimeout(() => {
-      setSuccessMsg("");
-    }, 6000);
+      setBlogSuccess(false);
+    }, 4000);
   };
 
-  const handleDeletePost = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this article? This action is permanent and cannot be undone.")) {
-      const updated = posts.filter(p => p.id !== id);
-      setPosts(updated);
-      localStorage.setItem("wqa_blog_posts", JSON.stringify(updated));
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (e) {
+      return dateStr;
     }
   };
 
   if (!isAuthenticated) {
     return (
-      <div className="flex-1 min-h-[75vh] flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-8.5 rounded-3xl border border-slate-200/80 shadow-md">
-          <div className="text-center">
-            <span className="inline-flex items-center justify-center bg-emerald-50 text-emerald-800 p-4.5 rounded-full border border-emerald-150 mb-4 shadow-3xs">
-              <Lock className="w-8 h-8 text-emerald-700 animate-pulse" />
-            </span>
-            <h2 className="text-2xl font-serif font-extrabold text-slate-900 tracking-tight">
-              Academy Portal Security
-            </h2>
-            <p className="mt-2 text-xs text-slate-500 font-semibold uppercase tracking-wider">
-              Secure Blogging CMS Gateway
+      <div className="max-w-md mx-auto py-24 px-4" id="admin-login-wrapper">
+        <div className="bg-white rounded-2xl border border-emerald-950/10 shadow-xl p-8 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center mx-auto shadow-sm">
+              <Lock className="w-6 h-6" />
+            </div>
+            <h3 className="text-2xl font-bold text-emerald-950">Academy Admin Area</h3>
+            <p className="text-xs text-emerald-950/50">
+              Password-protected admin area. Standard demo password is <strong className="text-emerald-900 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">admin123</strong>.
             </p>
           </div>
 
-          <form className="mt-8 space-y-5" onSubmit={handleLogin}>
-            <div className="rounded-xl shadow-3xs">
-              <label htmlFor="access-password" className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                Enter Portal Password:
+          <form onSubmit={handleLogin} className="space-y-4" id="admin-login-form">
+            <div>
+              <label className="block text-xs font-bold text-emerald-950/80 uppercase mb-1.5">
+                Admin Password
               </label>
-              <div className="relative">
-                <input
-                  id="access-password"
-                  name="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password (Default: WQA2026!)"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4.5 pl-10 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-medium placeholder-slate-400"
-                />
-                <Key className="absolute left-3.5 top-3.5 w-4.5 h-4.5 text-slate-400" />
-              </div>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-2.5 rounded-xl border border-emerald-950/10 focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800 outline-none transition-all text-sm bg-slate-50/50 text-emerald-950"
+              />
             </div>
 
-            {errorMsg && (
-              <div className="text-red-600 bg-red-50 border border-red-200 text-xs p-3 rounded-xl font-medium text-center">
-                {errorMsg}
-              </div>
+            {authError && (
+              <p className="text-xs text-red-600 font-semibold">{authError}</p>
             )}
 
             <button
               type="submit"
-              className="w-full py-3.5 px-4 rounded-xl text-xs font-extrabold tracking-wider transition-all cursor-pointer text-center text-white bg-emerald-700 hover:bg-emerald-800 shadow-sm uppercase"
+              className="w-full py-3 bg-emerald-900 hover:bg-emerald-950 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer active:scale-98"
             >
-              Unlock Access
+              Authenticate & Enter
             </button>
           </form>
         </div>
@@ -221,285 +170,341 @@ export default function AdminPage({ lang }: AdminPageProps) {
   }
 
   return (
-    <div className="flex-1 bg-slate-50 py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        
-        {/* Header Block */}
-        <div className="bg-white p-6.5 rounded-2.5xl border border-slate-200/80 shadow-3xs flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="bg-emerald-50 text-emerald-850 p-3 rounded-xl border border-emerald-150">
-              <LayoutDashboard className="w-6 h-6 text-emerald-700" />
-            </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-serif font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                <span>Blogging CMS & Local Publishing</span>
-                <span className="text-[10px] bg-emerald-650 text-white font-extrabold px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">ADMIN LIVE</span>
-              </h1>
-              <p className="text-xs text-slate-550 font-medium mt-0.5">
-                Worldwide Quran Academy Portal • Create articles that render instantly.
-              </p>
-            </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10" id="admin-dashboard-container">
+      {/* Header and Logout */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-950/5 pb-6">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-emerald-950 flex items-center gap-2">
+            <Settings className="w-6 h-6 text-emerald-700 animate-spin-slow" />
+            Academy Lead Control Panel
+          </h2>
+          <p className="text-xs text-emerald-950/50 font-sans mt-1">
+            Analyze, track, and update live 3-day free trial signups and parent queries.
+          </p>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 border border-emerald-950/10 hover:bg-red-50 hover:text-red-700 text-emerald-950 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+        >
+          Sign Out Admin
+        </button>
+      </div>
+
+      {/* Stats Bento boxes */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6" id="admin-stats-bento">
+        <div className="bg-white rounded-2xl border border-emerald-950/10 p-6 flex items-center justify-between shadow-sm">
+          <div>
+            <p className="text-xs font-bold uppercase text-emerald-950/50">Active Registrations</p>
+            <p className="text-3xl font-extrabold text-emerald-950 mt-1">{bookings.length}</p>
           </div>
-          
-          <button
-            onClick={() => setIsAuthenticated(false)}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4 text-emerald-800" />
-            <span>Lock Portal</span>
-          </button>
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <Users className="w-6 h-6" />
+          </div>
         </div>
 
-        {/* Success / Error Banners */}
-        {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-start gap-3 shadow-3xs text-emerald-900">
-            <CheckCircle className="w-5 h-5 text-emerald-650 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider">Publishing Successful</h4>
-              <p className="text-xs font-medium mt-0.5">{successMsg}</p>
-            </div>
+        <div className="bg-white rounded-2xl border border-emerald-950/10 p-6 flex items-center justify-between shadow-sm">
+          <div>
+            <p className="text-xs font-bold uppercase text-emerald-950/50">Support Messages</p>
+            <p className="text-3xl font-extrabold text-emerald-950 mt-1">{messages.length}</p>
           </div>
-        )}
-
-        {errorMsg && (
-          <div className="bg-red-50 border border-red-200 p-4 rounded-2xl text-red-700 text-xs font-medium text-center shadow-3xs">
-            {errorMsg}
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <Mail className="w-6 h-6" />
           </div>
-        )}
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* CMS Form Card */}
-          <form onSubmit={handlePublish} className="lg:col-span-7 bg-white p-6.5 md:p-8 rounded-3xl border border-slate-200/80 shadow-md space-y-6">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
-              <span className="p-1.5 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-100">
-                <Plus className="w-4 h-4 text-emerald-700" />
-              </span>
-              <h2 className="text-base font-serif font-bold text-slate-900 uppercase tracking-tight">
-                Create New Informative Article
-              </h2>
-            </div>
+        <div className="bg-white rounded-2xl border border-emerald-950/10 p-6 flex items-center justify-between shadow-sm">
+          <div>
+            <p className="text-xs font-bold uppercase text-emerald-950/50">Latest Conversion Rate</p>
+            <p className="text-3xl font-extrabold text-emerald-950 mt-1">
+              {bookings.length > 0 ? Math.round((bookings.filter(b => b.status === "Enrolled").length / bookings.length) * 100) : 0}%
+            </p>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <Sparkles className="w-6 h-6 fill-emerald-100" />
+          </div>
+        </div>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Category selector */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">
-                  Category *
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-semibold"
-                >
-                  <option value="parents">Parenting & Kids</option>
-                  <option value="tajweed">Tajweed Guides</option>
-                  <option value="hifz">Hifz Benefits</option>
-                </select>
-              </div>
+      {/* Tab controls */}
+      <div className="flex border-b border-emerald-950/5 gap-2" id="admin-tabs">
+        {[
+          { id: "bookings", label: "Trial Bookings Lead", icon: <Users className="w-4 h-4" /> },
+          { id: "messages", label: "Contact Emails", icon: <Mail className="w-4 h-4" /> },
+          { id: "blogs", label: "Post Mock Blog", icon: <BookOpen className="w-4 h-4" /> }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-4 py-3 text-xs font-bold flex items-center gap-1.5 border-b-2 transition-all cursor-pointer ${
+              activeTab === tab.id
+                ? "border-emerald-800 text-emerald-900 font-semibold"
+                : "border-transparent text-emerald-950/60 hover:text-emerald-900"
+            }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-              {/* Image URL input */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">
-                  Image URL (Paste direct image link)
-                </label>
-                <div className="relative">
-                  <input
-                    type="url"
-                    placeholder="e.g. https://images.unsplash.com/photo-..."
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 pl-10 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-medium placeholder-slate-400"
-                  />
-                  <Image className="absolute left-3.5 top-3.5 w-4.5 h-4.5 text-slate-400" />
-                </div>
-              </div>
-            </div>
-
-            {/* Title Translation Block */}
-            <div className="space-y-4 pt-1">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Title (English) *</span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="e.g. 5 Benefits of Quran Recitation for Mental Calmness"
-                  required
-                  value={titleEn}
-                  onChange={(e) => setTitleEn(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4.5 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-medium"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">Title (Urdu translation - Optional)</span>
-                <input
-                  type="text"
-                  placeholder="مثال: بچوں کو گھر بیٹھے قرآن پاک سکھانے کے طریقے..."
-                  value={titleUr}
-                  onChange={(e) => setTitleUr(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4.5 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-medium text-right placeholder-slate-400"
-                  dir="rtl"
-                />
-              </div>
-            </div>
-
-            {/* Read Time & Author Block */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">
-                  Read Time (e.g. "5 min read")
-                </label>
-                <input
-                  type="text"
-                  value={readTime}
-                  onChange={(e) => setReadTime(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">
-                  Author Name
-                </label>
-                <input
-                  type="text"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-semibold"
-                />
-              </div>
-            </div>
-
-            {/* Brief Excerpts */}
-            <div className="space-y-4 pt-1">
-              <div className="space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">Brief Excerpt / Summary (English)</span>
-                <textarea
-                  rows={2}
-                  placeholder="Provide a 1-2 sentence quick summary to display on the blog listing cards."
-                  value={excerptEn}
-                  onChange={(e) => setExcerptEn(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4.5 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-medium placeholder-slate-400 resize-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">Brief Excerpt / Summary (Urdu - Optional)</span>
-                <textarea
-                  rows={2}
-                  placeholder="مضمون کا مختصر خلاصہ لکھیں..."
-                  value={excerptUr}
-                  onChange={(e) => setExcerptUr(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4.5 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-medium placeholder-slate-400 resize-none text-right"
-                  dir="rtl"
-                />
-              </div>
-            </div>
-
-            {/* Content Textarea */}
-            <div className="space-y-4 pt-1">
-              <div className="space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">Full Article Body Content (English) *</span>
-                <textarea
-                  rows={6}
-                  placeholder="Type or paste the full content of your article here. Supports paragraphs."
-                  required
-                  value={contentEn}
-                  onChange={(e) => setContentEn(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4.5 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-medium placeholder-slate-400"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">Full Article Body Content (Urdu - Optional)</span>
-                <textarea
-                  rows={6}
-                  placeholder="مضمون کا مکمل متن یہاں درج کریں..."
-                  value={contentUr}
-                  onChange={(e) => setContentUr(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4.5 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 focus:bg-white transition-all font-medium placeholder-slate-400 text-right"
-                  dir="rtl"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-4 px-4 rounded-xl text-xs font-extrabold tracking-wider transition-all cursor-pointer text-center text-white bg-emerald-700 hover:bg-emerald-800 shadow-md uppercase"
+      {/* Tabs Content */}
+      <div className="bg-white rounded-2xl border border-emerald-950/10 shadow-lg p-6 sm:p-8" id="admin-main-panel">
+        <AnimatePresence mode="wait">
+          {activeTab === "bookings" && (
+            <motion.div
+              key="bookings-tab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="space-y-6"
             >
-              Publish Article Instantly
-            </button>
-          </form>
-
-          {/* Sidebar published management list */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="bg-white p-6.5 rounded-3xl border border-slate-200/80 shadow-md">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-5">
-                <span className="p-1.5 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-100">
-                  <FileText className="w-4 h-4 text-emerald-700" />
-                </span>
-                <h2 className="text-base font-serif font-bold text-slate-900 uppercase tracking-tight">
-                  Manage Published Articles ({posts.length})
-                </h2>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold text-emerald-950">Active Trial Signups</h3>
+                <span className="text-xs font-semibold text-emerald-950/50">Total leads: {bookings.length}</span>
               </div>
 
-              {posts.length > 0 ? (
-                <div className="space-y-3.5 max-h-[70vh] overflow-y-auto pr-1">
-                  {posts.map((p) => (
-                    <div 
-                      key={p.id}
-                      className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-start justify-between gap-3 shadow-3xs transition-all hover:bg-slate-100"
-                    >
-                      <div className="space-y-1">
-                        <span className="px-2 py-0.5 bg-white border border-slate-250 text-emerald-850 rounded-full text-[8px] font-extrabold uppercase tracking-wider">
-                          {p.category.en === "parents" ? "Parenting" : p.category.en === "tajweed" ? "Tajweed" : "Hifz"}
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-800 line-clamp-1 pr-1 font-serif">
-                          {lang === "en" ? p.title.en : p.title.ur}
-                        </h4>
-                        <div className="flex items-center gap-2 text-[9px] text-slate-400 font-bold uppercase">
-                          <span>{p.date}</span>
-                          <span>•</span>
-                          <span>{p.readTime}</span>
+              {bookings.length === 0 ? (
+                <div className="text-center py-12 text-emerald-950/40">
+                  <p className="text-sm">No trials booked yet. Try booking one from the home page first!</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-emerald-950/5" id="bookings-table-wrapper">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-emerald-950/5 text-emerald-950/60 text-xs font-bold uppercase tracking-wider">
+                        <th className="p-4">Student Info</th>
+                        <th className="p-4">WhatsApp/Email</th>
+                        <th className="p-4">Course & Timing</th>
+                        <th className="p-4">Date Sub</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-emerald-950/5">
+                      {bookings.map((b) => (
+                        <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-4">
+                            <div className="font-bold text-emerald-950">{b.studentName}</div>
+                            {b.parentName && <div className="text-xs text-emerald-950/50">Parent: {b.parentName}</div>}
+                            <div className="text-xs text-emerald-800 font-semibold mt-0.5">{b.country}</div>
+                          </td>
+                          <td className="p-4 font-sans text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <Phone className="w-3 h-3 text-emerald-600" />
+                              <a href={`https://wa.me/${b.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:underline font-bold text-emerald-800">
+                                {b.whatsapp}
+                              </a>
+                            </div>
+                            <div className="text-emerald-950/50 mt-1">{b.email}</div>
+                          </td>
+                          <td className="p-4">
+                            <div className="font-semibold text-xs text-emerald-950 bg-emerald-50 px-2 py-0.5 rounded inline-block uppercase">
+                              {COURSES.find(c => c.id === b.courseId)?.title || b.courseId}
+                            </div>
+                            <div className="text-xs text-emerald-950/50 mt-1">Preferred: {b.preferredTime}</div>
+                            {b.preferredPlatform && (
+                              <div className="text-xs font-bold text-emerald-800 mt-1 flex items-center gap-1">
+                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                                Platform: {b.preferredPlatform}
+                              </div>
+                            )}
+                            {b.studentsCount && (
+                              <div className="text-xs font-bold text-emerald-950/70 mt-1">
+                                Students: <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded">{b.studentsCount}</span>
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-4 text-xs text-emerald-950/50 font-sans">
+                            {formatDate(b.dateCreated)}
+                          </td>
+                          <td className="p-4">
+                            <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                              b.status === "Enrolled"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : b.status === "Contacted"
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}>
+                              {b.status || "Pending"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleToggleStatus(b.id)}
+                                title="Change Status"
+                                className="p-1.5 rounded-lg border border-emerald-950/10 hover:border-emerald-800 text-emerald-700 hover:bg-emerald-50 transition-colors"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteBooking(b.id)}
+                                title="Delete Lead"
+                                className="p-1.5 rounded-lg border border-red-950/10 text-red-600 hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === "messages" && (
+            <motion.div
+              key="messages-tab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="space-y-6"
+            >
+              <h3 className="text-lg font-bold text-emerald-950">Incoming Contact Requests</h3>
+
+              {messages.length === 0 ? (
+                <div className="text-center py-12 text-emerald-950/40">
+                  <p className="text-sm">No general support emails sent yet. Try submitting the contact form!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-6" id="messages-list">
+                  {messages.map((m) => (
+                    <div key={m.id} className="p-5 rounded-xl border border-emerald-950/5 bg-slate-50/50 hover:bg-white transition-all shadow-sm space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold text-emerald-950">{m.name}</h4>
+                          <p className="text-xs text-emerald-950/50">{m.email}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] text-emerald-950/40 font-sans">{formatDate(m.dateCreated)}</span>
+                          <button
+                            onClick={() => handleDeleteMessage(m.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-colors border border-transparent hover:border-red-200"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePost(p.id)}
-                        className="text-red-550 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-100 transition-all cursor-pointer shrink-0"
-                        title="Delete this article permanently"
-                      >
-                        <Trash2 className="w-4.5 h-4.5 text-red-600" />
-                      </button>
+                      <div className="border-t border-emerald-950/5 pt-3 space-y-1">
+                        <p className="text-xs font-bold text-emerald-800">Subject: {m.subject}</p>
+                        {m.preferredPlatform && (
+                          <div className="text-xs text-emerald-700 font-semibold mb-1">
+                            Platform Preference: <span className="font-bold bg-emerald-50 px-1.5 py-0.5 rounded">{m.preferredPlatform}</span>
+                          </div>
+                        )}
+                        {m.studentsCount && (
+                          <div className="text-xs text-emerald-700 font-semibold mb-1">
+                            Students Count: <span className="font-bold bg-emerald-50 px-1.5 py-0.5 rounded">{m.studentsCount}</span>
+                          </div>
+                        )}
+                        <p className="text-sm text-emerald-950/70 font-sans whitespace-pre-line leading-relaxed">{m.message}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center py-10 bg-slate-50/50 border border-dashed border-slate-200 rounded-2xl p-4">
-                  <FileText className="w-8 h-8 text-slate-350 mx-auto mb-2" />
-                  <p className="text-[11px] font-bold text-slate-450">No published articles available.</p>
-                </div>
               )}
-            </div>
+            </motion.div>
+          )}
 
-            {/* CMS quick tip card */}
-            <div className="bg-emerald-900 text-emerald-100 p-6 rounded-2.5xl shadow-md border border-emerald-800 space-y-3">
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse shrink-0" />
-                <h4 className="text-xs font-bold uppercase tracking-wider">Blogging Portal Tips</h4>
-              </div>
-              <ul className="space-y-2 text-[11px] text-emerald-100/90 leading-relaxed font-semibold">
-                <li>• Articles are stored on the browser locally via secure storage. No GitHub commit is required!</li>
-                <li>• Adding articles instantly populates the Informative Articles (/blog) screen in both English and Urdu.</li>
-                <li>• Providing Urdu translations is completely optional. If left blank, the portal will auto-use the English values for perfect responsiveness.</li>
-              </ul>
-            </div>
-          </div>
+          {activeTab === "blogs" && (
+            <motion.div
+              key="blogs-tab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="space-y-6"
+            >
+              <h3 className="text-lg font-bold text-emerald-950">Simulate Sanity Blog Post Addition</h3>
+              <p className="text-xs text-emerald-950/50">
+                Instantly inject a mock blog post into your locally loaded dataset to test visual formatting and slug navigation.
+              </p>
 
-        </div>
+              <form onSubmit={handleBlogSubmit} className="space-y-4 max-w-2xl" id="admin-mock-blog-form">
+                <div>
+                  <label className="block text-xs font-bold text-emerald-950/80 uppercase mb-1.5">
+                    Post Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newBlog.title}
+                    onChange={(e) => setNewBlog({ ...newBlog, title: e.target.value })}
+                    placeholder="e.g. 5 Quran verses for patience during hardship"
+                    className="w-full px-4 py-2.5 rounded-xl border border-emerald-950/10 focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800 outline-none transition-all text-sm bg-slate-50/50 text-emerald-950"
+                  />
+                </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-emerald-950/80 uppercase mb-1.5">
+                    Short Excerpt
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newBlog.excerpt}
+                    onChange={(e) => setNewBlog({ ...newBlog, excerpt: e.target.value })}
+                    placeholder="Short summary preview shown on the list page..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-emerald-950/10 focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800 outline-none transition-all text-sm bg-slate-50/50 text-emerald-950"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-emerald-950/80 uppercase mb-1.5">
+                    Blog Post Body (Support Markdown: ### Headings etc.)
+                  </label>
+                  <textarea
+                    required
+                    rows={6}
+                    value={newBlog.body}
+                    onChange={(e) => setNewBlog({ ...newBlog, body: e.target.value })}
+                    placeholder="Write details of your blog article here..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-emerald-950/10 focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800 outline-none transition-all text-sm bg-slate-50/50 text-emerald-950"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-emerald-950/80 uppercase mb-1.5">
+                      Author Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newBlog.author}
+                      onChange={(e) => setNewBlog({ ...newBlog, author: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-emerald-950/10 focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800 outline-none transition-all text-sm bg-slate-50/50 text-emerald-950"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-emerald-900 hover:bg-emerald-950 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer"
+                >
+                  Publish Mock Blog Post
+                </button>
+
+                <AnimatePresence>
+                  {blogSuccess && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl flex items-center gap-2"
+                    >
+                      <Check className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                      Mock Blog published successfully! Navigate to the 'Islamic Blog' page to view it live in the list and read its content.
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
