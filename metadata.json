@@ -1,6 +1,5 @@
 {
-  "name": "Worldwide Quran Academy",
-  "description": "Learn Quran Online with Tajweed from experienced tutors. 1-on-1 standard structured classes for kids and adults.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "heroSectionImage": "./src/assets/images/quran_academy_hero_1782168948648.jpg",
+  "kidsAdultsStudyImage": "https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=1200&auto=format&fit=crop",
+  "quranDetailLogo": "./src/assets/images/quran_academy_logo_1782168948648.jpg"
 }
