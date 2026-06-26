@@ -30,44 +30,110 @@ export default function AdminPage() {
     loadData();
   }, []);
 
-  const loadData = () => {
-    // Load bookings
+  const loadData = async (adminPass?: string) => {
+    const pass = adminPass || sessionStorage.getItem("admin_password") || "";
+    try {
+      const res = await fetch("/api/submissions", {
+        headers: {
+          "x-admin-password": pass
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data.bookings || []);
+        setMessages(data.messages || []);
+        
+        // Also save to localStorage as backup/cache
+        localStorage.setItem("trial_bookings", JSON.stringify(data.bookings || []));
+        localStorage.setItem("contact_messages", JSON.stringify(data.messages || []));
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to load submissions from server, falling back to local storage:", err);
+    }
+
+    // Fallback
     const bookingsStr = localStorage.getItem("trial_bookings") || "[]";
     setBookings(JSON.parse(bookingsStr));
 
-    // Load messages
     const messagesStr = localStorage.getItem("contact_messages") || "[]";
     setMessages(JSON.parse(messagesStr));
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "admin123" || password === "quranadmin") {
-      setIsAuthenticated(true);
-      sessionStorage.setItem("admin_authenticated", "true");
-      setAuthError("");
-    } else {
-      setAuthError("Incorrect admin credentials. Try 'admin123'.");
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+      
+      if (res.ok) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem("admin_authenticated", "true");
+        sessionStorage.setItem("admin_password", password);
+        setAuthError("");
+        loadData(password);
+      } else {
+        const data = await res.json();
+        setAuthError(data.error || "Incorrect admin credentials.");
+      }
+    } catch (err) {
+      setAuthError("Failed to authenticate with server.");
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem("admin_authenticated");
+    sessionStorage.removeItem("admin_password");
   };
 
   // Delete booking
-  const handleDeleteBooking = (id: string) => {
+  const handleDeleteBooking = async (id: string) => {
+    const pass = sessionStorage.getItem("admin_password") || "";
+    try {
+      await fetch("/api/submissions/delete-booking", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-password": pass
+        },
+        body: JSON.stringify({ id }),
+      });
+    } catch (err) {
+      console.error("Failed to delete booking on server:", err);
+    }
+    
     const updated = bookings.filter((b) => b.id !== id);
     localStorage.setItem("trial_bookings", JSON.stringify(updated));
     setBookings(updated);
   };
 
   // Change booking status
-  const handleToggleStatus = (id: string) => {
+  const handleToggleStatus = async (id: string) => {
+    const booking = bookings.find((b) => b.id === id);
+    if (!booking) return;
+    
+    const nextStatus = booking.status === "Enrolled" ? "Pending" : booking.status === "Contacted" ? "Enrolled" : "Contacted";
+    const pass = sessionStorage.getItem("admin_password") || "";
+    
+    try {
+      await fetch("/api/submissions/update-booking-status", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-password": pass
+        },
+        body: JSON.stringify({ id, status: nextStatus }),
+      });
+    } catch (err) {
+      console.error("Failed to update status on server:", err);
+    }
+
     const updated = bookings.map((b) => {
       if (b.id === id) {
-        const nextStatus = b.status === "Enrolled" ? "Pending" : b.status === "Contacted" ? "Enrolled" : "Contacted";
         return { ...b, status: nextStatus };
       }
       return b;
@@ -77,7 +143,21 @@ export default function AdminPage() {
   };
 
   // Delete message
-  const handleDeleteMessage = (id: string) => {
+  const handleDeleteMessage = async (id: string) => {
+    const pass = sessionStorage.getItem("admin_password") || "";
+    try {
+      await fetch("/api/submissions/delete-message", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-password": pass
+        },
+        body: JSON.stringify({ id }),
+      });
+    } catch (err) {
+      console.error("Failed to delete message on server:", err);
+    }
+
     const updated = messages.filter((m) => m.id !== id);
     localStorage.setItem("contact_messages", JSON.stringify(updated));
     setMessages(updated);
@@ -134,7 +214,7 @@ export default function AdminPage() {
             </div>
             <h3 className="text-2xl font-bold text-emerald-950">Academy Admin Area</h3>
             <p className="text-xs text-emerald-950/50">
-              Password-protected admin area. Standard demo password is <strong className="text-emerald-900 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">admin123</strong>.
+              Please enter the secure academy admin password configured for your workspace to authenticate.
             </p>
           </div>
 

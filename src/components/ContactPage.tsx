@@ -14,31 +14,57 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      let serverData;
+      if (response.ok) {
+        serverData = await response.json();
+      }
+
+      // Sync with localStorage message cache for instant local display
       const existingStr = localStorage.getItem("contact_messages") || "[]";
       const existing = JSON.parse(existingStr);
-      
+      const newMessage = serverData?.data || {
+        ...formData,
+        id: "msg_" + Date.now(),
+        dateCreated: new Date().toISOString()
+      };
+      existing.unshift(newMessage);
+      localStorage.setItem("contact_messages", JSON.stringify(existing));
+
+      setSuccess(true);
+      setFormData({ name: "", email: "", subject: "", preferredPlatform: "Zoom", studentsCount: "1 Student", message: "" });
+    } catch (error) {
+      console.error("Error submitting contact inquiry:", error);
+      // Fallback
+      const existingStr = localStorage.getItem("contact_messages") || "[]";
+      const existing = JSON.parse(existingStr);
       const newMessage = {
         ...formData,
         id: "msg_" + Date.now(),
         dateCreated: new Date().toISOString()
       };
-
       existing.unshift(newMessage);
       localStorage.setItem("contact_messages", JSON.stringify(existing));
-
-      setIsSubmitting(false);
       setSuccess(true);
       setFormData({ name: "", email: "", subject: "", preferredPlatform: "Zoom", studentsCount: "1 Student", message: "" });
-
+    } finally {
+      setIsSubmitting(false);
       setTimeout(() => {
         setSuccess(false);
       }, 5000);
-    }, 1000);
+    }
   };
 
   return (

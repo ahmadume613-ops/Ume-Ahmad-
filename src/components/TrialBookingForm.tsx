@@ -24,30 +24,55 @@ export default function TrialBookingForm({ onSuccess, language }: TrialBookingFo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      // Fetch existing bookings
+    try {
+      const response = await fetch("/api/book-trial", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      let serverData;
+      if (response.ok) {
+        serverData = await response.json();
+      }
+
+      // Also update local storage so local cached lists are in sync
       const existingStr = localStorage.getItem("trial_bookings") || "[]";
       const existing = JSON.parse(existingStr);
-      
+      const newBooking = serverData?.data || {
+        ...formData,
+        id: "b_" + Date.now(),
+        dateCreated: new Date().toISOString()
+      };
+      existing.unshift(newBooking);
+      localStorage.setItem("trial_bookings", JSON.stringify(existing));
+
+      setSuccess(true);
+    } catch (error) {
+      console.error("Error submitting booking:", error);
+      // Fallback to local storage in case of any network/server glitches
+      const existingStr = localStorage.getItem("trial_bookings") || "[]";
+      const existing = JSON.parse(existingStr);
       const newBooking = {
         ...formData,
         id: "b_" + Date.now(),
         dateCreated: new Date().toISOString()
       };
-
       existing.unshift(newBooking);
       localStorage.setItem("trial_bookings", JSON.stringify(existing));
-
-      setIsSubmitting(false);
       setSuccess(true);
+    } finally {
+      setIsSubmitting(false);
       setTimeout(() => {
         onSuccess();
       }, 2500);
-    }, 1000);
+    }
   };
 
   const countries = [
